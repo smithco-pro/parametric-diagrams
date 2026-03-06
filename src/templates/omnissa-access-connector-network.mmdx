@@ -1,0 +1,160 @@
+---
+{
+  "name": "Omnissa Access 24.12 Connector — Network Topology",
+  "parameters": [
+    { "key": "connectorName", "type": "string", "label": "Connector Hostname", "defaultValue": "myconnector.example.com" },
+    { "key": "connectorIP", "type": "string", "label": "Connector Static IP", "defaultValue": "10.28.128.3" },
+    { "key": "deploymentSpec", "type": "string", "label": "Deployment Spec Label", "defaultValue": "Small: 4 vCPU, 12 GB RAM, 50 GB Disk" },
+    { "key": "isCloud", "type": "boolean", "label": "Cloud Deployment", "defaultValue": true },
+    { "key": "accessServiceHost", "type": "string", "label": "Access Service Host", "defaultValue": "access.example.com" },
+    { "key": "enableDirSync", "type": "boolean", "label": "Directory Sync Service", "defaultValue": true },
+    { "key": "enableUserAuth", "type": "boolean", "label": "User Auth Service", "defaultValue": true },
+    { "key": "enableKerberosAuth", "type": "boolean", "label": "Kerberos Auth Service", "defaultValue": true },
+    { "key": "enableVirtualApp", "type": "boolean", "label": "Virtual App Service", "defaultValue": true },
+    { "key": "enableKerberosLB", "type": "boolean", "label": "Load Balancer for Kerberos HA", "defaultValue": false },
+    { "key": "lbName", "type": "string", "label": "Load Balancer Label", "defaultValue": "Load Balancer" },
+    { "key": "enableProxy", "type": "boolean", "label": "Outbound HTTP Proxy", "defaultValue": false },
+    { "key": "enableRSA", "type": "boolean", "label": "RSA SecurID", "defaultValue": false },
+    { "key": "rsaPort", "type": "number", "label": "RSA SecurID Port", "defaultValue": 5555, "validation": { "min": 1, "max": 65535 } },
+    { "key": "enableSyslog", "type": "boolean", "label": "Syslog Server", "defaultValue": false },
+    { "key": "syslogPort", "type": "number", "label": "Syslog UDP Port", "defaultValue": 514, "validation": { "min": 1, "max": 65535 } },
+    { "key": "enableNTP", "type": "boolean", "label": "Show NTP Server", "defaultValue": true },
+    { "key": "enableHorizon", "type": "boolean", "label": "Horizon Integration", "defaultValue": false },
+    { "key": "enableCitrix", "type": "boolean", "label": "Citrix Integration", "defaultValue": false },
+    { "key": "citrixSFPort", "type": "number", "label": "Citrix StoreFront Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 } }
+  ]
+}
+---
+graph TD
+    %% ═══════════════════════════════════════
+    %%  CONNECTOR NODE
+    %% ═══════════════════════════════════════
+    CONN[<b>Omnissa Access 24.12 Connector</b><br/>{{connectorName}} — {{connectorIP}}<br/>{{deploymentSpec}}<br/>TLS 1.2 + 1.3]
+
+    %% ═══════════════════════════════════════
+    %%  INBOUND — Kerberos Authentication
+    %% ═══════════════════════════════════════
+    {{#if enableKerberosAuth}}
+    BROWSERS[🌐 Browsers / End Users]
+    {{#if enableKerberosLB}}
+    LB{⚖️ {{lbName}} }
+    BROWSERS -->|443 HTTPS| LB
+    LB -->|443 HTTPS| CONN
+    {{else}}
+    BROWSERS -->|443 HTTPS Inbound| CONN
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Omnissa Access Service
+    %% ═══════════════════════════════════════
+    {{#if isCloud}}
+    ACCESS[☁️ Omnissa Access Cloud<br/>{{accessServiceHost}}<br/>IPs per KB 68035]
+    {{else}}
+    ACCESS[🏢 Omnissa Access On-Prem<br/>{{accessServiceHost}}]
+    {{/if}}
+    {{#if enableProxy}}
+    PROXY[🔀 HTTP Proxy<br/>Unauthenticated HTTP/HTTPS<br/>or Authenticated HTTPS]
+    CONN -->|Outbound Internet| PROXY
+    PROXY -->|443 HTTPS| ACCESS
+    {{else}}
+    CONN -->|443 HTTPS<br/>All Services| ACCESS
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Identity Infrastructure
+    %% ═══════════════════════════════════════
+    subgraph IDENTITY[Identity Infrastructure]
+        DNS[🔍 DNS Server]
+        {{#if enableDirSync}}
+        AD[📂 Active Directory]
+        DC[🖥️ Domain Controller]
+        {{else}}
+        {{#if enableUserAuth}}
+        AD[📂 Active Directory]
+        DC[🖥️ Domain Controller]
+        {{/if}}
+        {{/if}}
+    end
+
+    CONN -->|53 TCP/UDP<br/>All Services| DNS
+
+    {{#if enableDirSync}}
+    CONN -->|389, 636, 3268, 3269<br/>Dir Sync{{#if enableUserAuth}} + User Auth{{/if}}| AD
+    CONN -->|88, 135, 445 TCP/UDP<br/>Dir Sync| DC
+    CONN -->|464 TCP/UDP<br/>Dir Sync{{#if enableUserAuth}} + User Auth{{/if}}| DC
+    {{else}}
+    {{#if enableUserAuth}}
+    CONN -->|389, 636, 3268, 3269<br/>User Auth| AD
+    CONN -->|464 TCP/UDP<br/>User Auth| DC
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — RSA SecurID
+    %% ═══════════════════════════════════════
+    {{#if enableUserAuth}}
+    {{#if enableRSA}}
+    RSA[🔐 RSA SecurID Server]
+    CONN -->|{{rsaPort}}<br/>User Auth| RSA
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — App Integrations
+    %% ═══════════════════════════════════════
+    {{#if enableVirtualApp}}
+    {{#if enableHorizon}}
+    subgraph HORIZON_GRP[Horizon Integration]
+        HCS[🖥️ Horizon Connection Server]
+    end
+    CONN -->|443<br/>Virtual App| HCS
+    {{/if}}
+    {{#if enableCitrix}}
+    subgraph CITRIX_GRP[Citrix Integration]
+        CSF[🟦 Citrix StoreFront]
+        CXA[🟦 Citrix XenApp / XenDesktop]
+    end
+    CONN -->|{{citrixSFPort}}<br/>Virtual App| CSF
+    CONN -->|443<br/>Virtual App| CXA
+    {{/if}}
+    {{/if}}
+    %% NOTE: Browsers also need direct access to Client Access
+    %% FQDNs for Horizon/Citrix collections on their configured
+    %% ports. That path does not traverse the connector.
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Monitoring / Infrastructure
+    %% ═══════════════════════════════════════
+    {{#if enableSyslog}}
+    SYSLOG[📝 Syslog Server<br/>App-level events only]
+    CONN -->|{{syslogPort}} UDP<br/>All Services| SYSLOG
+    {{/if}}
+    {{#if enableNTP}}
+    NTP[🕐 NTP Server]
+    CONN -.->|123 UDP<br/>Time Sync| NTP
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  STYLES
+    %% ═══════════════════════════════════════
+    style CONN fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:2px
+    style IDENTITY fill:#f3e5f5,color:#000,stroke:#7b1fa2
+    {{#if isCloud}}
+    style ACCESS fill:#e8f5e9,color:#1b5e20,stroke:#2e7d32
+    {{else}}
+    style ACCESS fill:#e3f2fd,color:#0d47a1,stroke:#1565c0
+    {{/if}}
+    {{#if enableKerberosAuth}}
+    {{#if enableKerberosLB}}
+    style LB fill:#fff3e0,color:#e65100,stroke:#ef6c00
+    {{/if}}
+    {{/if}}
+    {{#if enableVirtualApp}}
+    {{#if enableHorizon}}
+    style HORIZON_GRP fill:#e8eaf6,color:#000,stroke:#3949ab
+    {{/if}}
+    {{#if enableCitrix}}
+    style CITRIX_GRP fill:#e8eaf6,color:#000,stroke:#3949ab
+    {{/if}}
+    {{/if}}

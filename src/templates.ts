@@ -1,10 +1,6 @@
 import { parseMmdx, compileTemplate } from "./templateEngine";
 import type { MmdxMeta } from "./templateEngine";
 
-import networkRaw from "./templates/network.mmdx?raw";
-import deploymentRaw from "./templates/deployment.mmdx?raw";
-import sequenceRaw from "./templates/sequence.mmdx?raw";
-
 export type { MmdxMeta };
 export type ParameterDef = MmdxMeta["parameters"][number];
 
@@ -25,8 +21,15 @@ function loadTemplate(raw: string): DiagramTemplate {
   };
 }
 
-export const templates: Record<string, DiagramTemplate> = {
-  network: loadTemplate(networkRaw),
-  deployment: loadTemplate(deploymentRaw),
-  sequence: loadTemplate(sequenceRaw),
-};
+const mmdxModules = import.meta.glob<string>("./templates/*.mmdx", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+export const templates: Record<string, DiagramTemplate> = Object.fromEntries(
+  Object.entries(mmdxModules).map(([path, raw]) => {
+    const key = path.replace("./templates/", "").replace(".mmdx", "");
+    return [key, loadTemplate(raw)];
+  })
+);
