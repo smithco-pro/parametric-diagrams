@@ -1,13 +1,16 @@
 import Handlebars from "handlebars";
 
+Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+
 export interface MmdxMeta {
   name: string;
   parameters: {
     key: string;
-    type: "boolean" | "number" | "string";
+    type: "boolean" | "number" | "string" | "select";
     label: string;
     defaultValue: boolean | number | string;
     validation?: { min?: number; max?: number };
+    options?: { label: string; value: string }[];
   }[];
 }
 

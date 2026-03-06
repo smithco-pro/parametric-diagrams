@@ -4,7 +4,11 @@
   "parameters": [
     { "key": "connectorName", "type": "string", "label": "Connector Hostname", "defaultValue": "myconnector.example.com" },
     { "key": "connectorIP", "type": "string", "label": "Connector Static IP", "defaultValue": "10.28.128.3" },
-    { "key": "deploymentSpec", "type": "string", "label": "Deployment Spec Label", "defaultValue": "Small: 4 vCPU, 12 GB RAM, 50 GB Disk" },
+    { "key": "deploymentSize", "type": "select", "label": "Deployment Sizing", "defaultValue": "small", "options": [
+      { "label": "Small: 2 vCPU, 8 GB RAM, 40 GB Disk (up to 50k users)", "value": "small" },
+      { "label": "Medium: 4 vCPU, 8 GB RAM, 40 GB Disk (up to 100k users)", "value": "medium" },
+      { "label": "Large: 8 vCPU, 12 GB RAM, 40 GB Disk (up to 200k users)", "value": "large" }
+    ] },
     { "key": "isCloud", "type": "boolean", "label": "Cloud Deployment", "defaultValue": true },
     { "key": "accessServiceHost", "type": "string", "label": "Access Service Host", "defaultValue": "access.example.com" },
     { "key": "enableDirSync", "type": "boolean", "label": "Directory Sync Service", "defaultValue": true },
@@ -29,7 +33,7 @@ graph TD
     %% ═══════════════════════════════════════
     %%  CONNECTOR NODE
     %% ═══════════════════════════════════════
-    CONN[<b>Omnissa Access 24.12 Connector</b><br/>{{connectorName}} — {{connectorIP}}<br/>{{deploymentSpec}}<br/>TLS 1.2 + 1.3]
+    CONN[<b>Omnissa Access 24.12 Connector</b><br/>{{connectorName}} — {{connectorIP}}<br/>{{#if (eq deploymentSize "small")}}2 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "medium")}}4 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "large")}}8 vCPU, 12 GB RAM, 40 GB Disk{{/if}}<br/>TLS 1.2 + 1.3]
 
     %% ═══════════════════════════════════════
     %%  INBOUND — Kerberos Authentication

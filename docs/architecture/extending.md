@@ -46,23 +46,30 @@ See the [Handlebars Block Helpers guide](https://handlebarsjs.com/guide/block-he
 
 ## Adding a New Parameter Type
 
-The current types are `string`, `boolean`, and `number`. To add a new type (e.g., `select`):
+The built-in types are `string`, `boolean`, `number`, and `select`. To add another type:
 
-1. **Update the type union** in `src/templateEngine.ts`:
-   ```ts
-   export interface MmdxMeta {
-     // ...
-     parameters: {
-       // ...
-       type: "boolean" | "number" | "string" | "select";
-       options?: string[]; // for select type
-     }[];
-   }
-   ```
+1. **Update the type union** in `src/templateEngine.ts` — add the new type string to the `type` field and any extra fields it needs.
 
-2. **Add form rendering** in `src/parameterUI.ts` inside the `renderParameterForm` function. Add a new branch handling the `"select"` type alongside the existing `"boolean"` / `"number"` / `"string"` branches.
+2. **Add form rendering** in `src/parameterUI.ts` inside `renderParameterForm`. Add a new branch for your type alongside the existing ones. Set `dataset.key` and `dataset.paramType` on the element.
 
-3. **Add value extraction** in the `getParameterValues` function in `src/parameterUI.ts` to read the value from your new control.
+3. **Add value extraction** in `getParameterValues` in `src/parameterUI.ts` to read the value from your new control. The selector `[data-key]` already matches any element type.
+
+4. **Add CSS** in `src/style.css` for the new control (follow existing `.param-row` patterns).
+
+The `select` type is a good reference implementation — it uses `{ label, value }` objects in an `options` array:
+
+```json
+{
+  "key": "sizing",
+  "type": "select",
+  "label": "Deployment Size",
+  "defaultValue": "small",
+  "options": [
+    { "label": "Small (2 vCPU)", "value": "small" },
+    { "label": "Large (8 vCPU)", "value": "large" }
+  ]
+}
+```
 
 ## Mermaid Configuration {#mermaid-configuration}
 

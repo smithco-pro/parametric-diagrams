@@ -45,6 +45,22 @@ export function renderParameterForm(
       row.appendChild(label);
       row.appendChild(input);
       row.appendChild(toggle);
+    } else if (param.type === "select") {
+      const select = document.createElement("select");
+      select.id = id;
+      select.dataset.key = param.key;
+      select.dataset.paramType = "select";
+
+      for (const opt of param.options ?? []) {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.label;
+        if (opt.value === param.defaultValue) option.selected = true;
+        select.appendChild(option);
+      }
+
+      row.appendChild(label);
+      row.appendChild(select);
     } else {
       input = document.createElement("input");
       input.id = id;
@@ -85,17 +101,17 @@ export function renderParameterForm(
 
 function getParameterValues(form: HTMLFormElement): Record<string, unknown> {
   const context: Record<string, unknown> = {};
-  const inputs = form.querySelectorAll<HTMLInputElement>("input[data-key]");
-  for (const input of inputs) {
-    const key = input.dataset.key!;
-    const type = input.dataset.paramType;
+  const elements = form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-key]");
+  for (const el of elements) {
+    const key = el.dataset.key!;
+    const type = el.dataset.paramType;
     if (type === "boolean") {
-      context[key] = input.checked;
+      context[key] = (el as HTMLInputElement).checked;
     } else if (type === "number") {
-      const num = Number(input.value);
+      const num = Number(el.value);
       context[key] = isNaN(num) ? 0 : num;
     } else {
-      context[key] = input.value;
+      context[key] = el.value;
     }
   }
   return context;

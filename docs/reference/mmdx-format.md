@@ -11,7 +11,11 @@ The `.mmdx` (Mermaid Extended) format is a single file containing a JSON frontma
   "parameters": [
     { "key": "variableName", "type": "string", "label": "Human Label", "defaultValue": "default" },
     { "key": "featureToggle", "type": "boolean", "label": "Enable Feature", "defaultValue": true },
-    { "key": "portNumber", "type": "number", "label": "Port", "defaultValue": 8080, "validation": { "min": 1, "max": 65535 } }
+    { "key": "portNumber", "type": "number", "label": "Port", "defaultValue": 8080, "validation": { "min": 1, "max": 65535 } },
+    { "key": "sizing", "type": "select", "label": "Deployment Size", "defaultValue": "small", "options": [
+      { "label": "Small (2 vCPU)", "value": "small" },
+      { "label": "Large (8 vCPU)", "value": "large" }
+    ] }
   ]
 }
 ---
@@ -40,10 +44,11 @@ Each entry in the `parameters` array has these fields:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `key` | `string` | Yes | Variable name used in Handlebars expressions |
-| `type` | `"string" \| "boolean" \| "number"` | Yes | Controls the generated UI input type |
+| `type` | `"string" \| "boolean" \| "number" \| "select"` | Yes | Controls the generated UI input type |
 | `label` | `string` | Yes | Human-readable label shown in the form |
 | `defaultValue` | `string \| boolean \| number` | Yes | Initial value when the template loads |
 | `validation` | `{ min?: number, max?: number }` | No | Min/max constraints (number type only) |
+| `options` | `{ label: string, value: string }[]` | No | Choices for select type (required when type is `"select"`) |
 
 ### Type Behavior
 
@@ -52,6 +57,7 @@ Each entry in the `parameters` array has these fields:
 | `string` | Text input (monospace) | Used as initial input value |
 | `boolean` | Toggle switch | Checked/unchecked state |
 | `number` | Number input with optional min/max | Parsed as `Number()`, falls back to `0` if NaN |
+| `select` | Dropdown (`<select>`) from `options` array | Option matching `defaultValue` is pre-selected |
 
 ## Template Body
 

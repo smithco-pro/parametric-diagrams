@@ -84,6 +84,7 @@ button:hover { background: #c73650; }
   font-size: 0.9rem;
 }
 
+.param-row select,
 .param-row input[type="text"],
 .param-row input[type="number"] {
   flex: 1;
@@ -96,6 +97,7 @@ button:hover { background: #c73650; }
   font-size: 0.85rem;
 }
 
+.param-row select:focus,
 .param-row input[type="text"]:focus,
 .param-row input[type="number"]:focus {
   outline: none;
