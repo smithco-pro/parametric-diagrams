@@ -6,6 +6,7 @@ export default withMermaid(
     title: "Parametric Diagrams",
     description:
       "Generate parameterized Mermaid diagrams with Handlebars templates",
+    base: "/parametric-diagrams/docs/",
     themeConfig: {
       nav: [
         { text: "Guide", link: "/guide/getting-started" },
