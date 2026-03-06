@@ -3,7 +3,8 @@ import type { ParameterDef } from "./templates";
 export function renderParameterForm(
   container: HTMLElement,
   parameters: ParameterDef[],
-  onChange: (context: Record<string, unknown>) => void
+  onChange: (context: Record<string, unknown>) => void,
+  initialValues?: Record<string, unknown>
 ): void {
   container.innerHTML = "";
 
@@ -43,7 +44,7 @@ export function renderParameterForm(
       input = document.createElement("input");
       input.type = "checkbox";
       input.id = id;
-      input.checked = param.defaultValue as boolean;
+      input.checked = (initialValues?.[param.key] ?? param.defaultValue) as boolean;
       input.dataset.key = param.key;
       input.dataset.paramType = "boolean";
 
@@ -67,7 +68,8 @@ export function renderParameterForm(
         const option = document.createElement("option");
         option.value = opt.value;
         option.textContent = opt.label;
-        if (opt.value === param.defaultValue) option.selected = true;
+        const selectedValue = initialValues?.[param.key] ?? param.defaultValue;
+        if (opt.value === selectedValue) option.selected = true;
         select.appendChild(option);
       }
 
@@ -80,13 +82,13 @@ export function renderParameterForm(
 
       if (param.type === "number") {
         input.type = "number";
-        input.value = String(param.defaultValue);
+        input.value = String(initialValues?.[param.key] ?? param.defaultValue);
         input.dataset.paramType = "number";
         if (param.validation?.min !== undefined) input.min = String(param.validation.min);
         if (param.validation?.max !== undefined) input.max = String(param.validation.max);
       } else {
         input.type = "text";
-        input.value = param.defaultValue as string;
+        input.value = (initialValues?.[param.key] ?? param.defaultValue) as string;
         input.dataset.paramType = "string";
       }
 
@@ -208,10 +210,13 @@ function getParameterValues(form: HTMLFormElement): Record<string, unknown> {
   return context;
 }
 
-export function getDefaultContext(parameters: ParameterDef[]): Record<string, unknown> {
+export function getDefaultContext(
+  parameters: ParameterDef[],
+  overrides?: Record<string, unknown>
+): Record<string, unknown> {
   const context: Record<string, unknown> = {};
   for (const param of parameters) {
-    context[param.key] = param.defaultValue;
+    context[param.key] = overrides?.[param.key] ?? param.defaultValue;
   }
   return context;
 }

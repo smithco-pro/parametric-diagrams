@@ -10,6 +10,7 @@ graph LR
     main --> parameterUI[parameterUI.ts]
     main --> renderer[renderer.ts]
     main --> templateEngine[templateEngine.ts]
+    main --> urlState[urlState.ts]
     templates --> templateEngine
     templates -.->|import.meta.glob| mmdx[templates/*.mmdx]
 ```
@@ -20,9 +21,10 @@ graph LR
 flowchart TD
     A[".mmdx files in src/templates/"] -->|import.meta.glob| B[templates.ts registry]
     B -->|parseMmdx + compileTemplate| C[DiagramTemplate objects]
-    C -->|user selects template| D[renderParameterForm]
+    C -->|user selects template or URL state| D[renderParameterForm]
     D -->|user changes params| E[executeTemplate]
     E -->|resolved Mermaid source| F[renderDiagram]
+    E -->|sync state| I[updateURL]
     F -->|mermaid.render| G[SVG in preview panel]
     G -->|export| H[SVG / PNG download]
 ```
@@ -55,6 +57,12 @@ Handles Mermaid rendering and diagram export:
 - `getSvgContent()` -- Serializes rendered SVG to string
 - `exportAsPng()` -- Converts SVG to PNG via canvas at 2x resolution
 
+### `src/urlState.ts` -- URL State Sync
+
+Reads and writes application state to/from URL query parameters:
+- `getStateFromURL()` -- Parses the current URL for a `template` key and parameter overrides, coercing values to the correct types based on parameter definitions
+- `updateURL()` -- Writes the current template key and parameter values to the URL via `history.replaceState` (no page reload)
+
 ### `src/main.ts` -- Application Entry Point
 
-Wires everything together: populates the template dropdown, handles selection changes, connects parameter form callbacks to the render pipeline, and sets up export button handlers.
+Wires everything together: populates the template dropdown, handles selection changes, connects parameter form callbacks to the render pipeline, sets up export button handlers, and restores state from URL query parameters on startup.

@@ -47,6 +47,7 @@ src/
   templateEngine.ts    # .mmdx parser, Handlebars compiler, executor
   renderer.ts          # Mermaid rendering and SVG/PNG export
   parameterUI.ts       # Parameter form UI generation
+  urlState.ts          # URL query parameter state sync
   style.css            # Application styling
   templates/           # .mmdx template files (auto-discovered)
 ```
@@ -59,3 +60,23 @@ src/
 4. Export as SVG or PNG when you're happy with the result
 
 Templates are `.mmdx` files -- Mermaid diagrams with Handlebars expressions and a JSON frontmatter block defining parameters. See the [.mmdx Format Reference](/reference/mmdx-format) for details.
+
+## Sharing via URL
+
+The application state is synchronized with the URL query string. As you select templates and change parameters, the URL updates automatically. You can copy the URL from the address bar to share a specific diagram configuration.
+
+### URL Format
+
+```
+?template=<template-key>&<param1>=<value1>&<param2>=<value2>
+```
+
+### Examples
+
+| URL | Effect |
+|-----|--------|
+| `?template=network` | Load the network template with default parameters |
+| `?template=network&showFirewall=true&serverCount=5` | Load network template with specific parameter values |
+| `?template=deployment` | Load the deployment template with defaults |
+
+Opening a shared URL will automatically select the template and apply the parameter values. Any parameters not specified in the URL will use their defaults.

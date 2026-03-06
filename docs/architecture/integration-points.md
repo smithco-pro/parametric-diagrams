@@ -104,15 +104,39 @@ mermaid.initialize({
 
 ### Functions
 
-#### `renderParameterForm(container: HTMLElement, parameters: ParameterDef[], onChange: (context: Record<string, unknown>) => void): void`
+#### `renderParameterForm(container: HTMLElement, parameters: ParameterDef[], onChange: (context: Record<string, unknown>) => void, initialValues?: Record<string, unknown>): void`
 
 Generates a form with controls for each parameter definition:
 - `boolean` -> Toggle switch (hidden checkbox + styled span)
 - `string` -> Text input
 - `number` -> Number input with optional `min`/`max` attributes
+- `select` -> Dropdown with labeled options
 
-The `onChange` callback fires on every `change` event (toggles) and `input` event (text/number fields), receiving the current parameter values as a context object.
+The optional `initialValues` argument overrides default values for form elements -- used when restoring state from URL query parameters.
 
-#### `getDefaultContext(parameters: ParameterDef[]): Record<string, unknown>`
+The `onChange` callback fires on every `change` event (toggles, selects) and `input` event (text/number fields), receiving the current parameter values as a context object.
 
-Creates a context object from parameter default values. Used for the initial render when a template is first selected.
+#### `getDefaultContext(parameters: ParameterDef[], overrides?: Record<string, unknown>): Record<string, unknown>`
+
+Creates a context object from parameter default values. When `overrides` is provided, those values take precedence over defaults. Used for the initial render when a template is first selected, optionally with URL-supplied values.
+
+## URL State (`src/urlState.ts`)
+
+### Interfaces
+
+```ts
+interface UrlState {
+  template: string | null;
+  paramOverrides: Record<string, unknown>;
+}
+```
+
+### Functions
+
+#### `getStateFromURL(parameters?: ParameterDef[]): UrlState`
+
+Reads the current URL query string and returns the template key and parameter overrides. When `parameters` is provided, query values are coerced to the correct types (boolean, number, string) based on the parameter definitions. Without `parameters`, only the `template` key is extracted.
+
+#### `updateURL(templateKey: string, paramValues: Record<string, unknown>): void`
+
+Writes the current template key and all parameter values to the URL query string using `history.replaceState`. This updates the address bar without triggering a page reload or adding a history entry, making the URL always shareable.

@@ -4,6 +4,7 @@ import type { DiagramTemplate } from "./templates";
 import { executeTemplate } from "./templateEngine";
 import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
+import { getStateFromURL, updateURL } from "./urlState";
 
 const output = document.getElementById("mermaid-output") as HTMLDivElement;
 const templateSelect = document.getElementById("template-select") as HTMLSelectElement;
@@ -14,6 +15,7 @@ const exportSvgBtn = document.getElementById("export-svg-btn") as HTMLButtonElem
 const exportPngBtn = document.getElementById("export-png-btn") as HTMLButtonElement;
 
 let currentTemplate: DiagramTemplate | null = null;
+let currentTemplateKey = "";
 let currentMermaid = "";
 
 // Populate template dropdown
@@ -29,12 +31,17 @@ function updateDiagram(context: Record<string, unknown>): void {
   currentMermaid = executeTemplate(currentTemplate.compiled, context);
   resolvedText.textContent = currentMermaid;
   renderDiagram(currentMermaid, output);
+  updateURL(currentTemplateKey, context);
 }
 
-function selectTemplate(key: string): void {
+function selectTemplate(
+  key: string,
+  paramOverrides?: Record<string, unknown>
+): void {
   const tmpl = templates[key];
   if (!tmpl) {
     currentTemplate = null;
+    currentTemplateKey = "";
     parametersContainer.innerHTML = "";
     resolvedText.textContent = "";
     output.innerHTML = "";
@@ -42,8 +49,14 @@ function selectTemplate(key: string): void {
   }
 
   currentTemplate = tmpl;
-  renderParameterForm(parametersContainer, tmpl.parameters, updateDiagram);
-  updateDiagram(getDefaultContext(tmpl.parameters));
+  currentTemplateKey = key;
+  renderParameterForm(
+    parametersContainer,
+    tmpl.parameters,
+    updateDiagram,
+    paramOverrides
+  );
+  updateDiagram(getDefaultContext(tmpl.parameters, paramOverrides));
 }
 
 templateSelect.addEventListener("change", () => {
@@ -77,8 +90,13 @@ exportPngBtn.addEventListener("click", () => {
   exportAsPng(output);
 });
 
-// Auto-select the first template
-if (templateSelect.options.length > 1) {
+// Check URL for template and parameter overrides, otherwise auto-select first
+const urlState = getStateFromURL();
+if (urlState.template && templates[urlState.template]) {
+  const paramOverrides = getStateFromURL(templates[urlState.template].parameters).paramOverrides;
+  templateSelect.value = urlState.template;
+  selectTemplate(urlState.template, paramOverrides);
+} else if (templateSelect.options.length > 1) {
   templateSelect.value = templateSelect.options[1].value;
   selectTemplate(templateSelect.value);
 }
