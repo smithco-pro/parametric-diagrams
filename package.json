@@ -6,11 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17"
   },
   "dependencies": {
     "handlebars": "^4.7.8",
