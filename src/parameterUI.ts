@@ -16,10 +16,22 @@ export function renderParameterForm(
   form.className = "parameter-form";
   form.addEventListener("submit", (e) => e.preventDefault());
 
+  const depthMap = getDepthMap(parameters);
+
   for (const param of parameters) {
     const id = `param-${param.key}`;
     const row = document.createElement("div");
     row.className = `param-row param-type-${param.type}`;
+    row.dataset.paramKey = param.key;
+    row.dataset.defaultValue = String(param.defaultValue);
+    if (param.showWhen) {
+      row.dataset.showWhenKey = param.showWhen.key;
+      row.dataset.showWhenValue = String(param.showWhen.value);
+    }
+    const depth = depthMap.get(param.key) ?? 0;
+    if (depth > 0) {
+      row.dataset.depth = String(depth);
+    }
 
     const label = document.createElement("label");
     label.htmlFor = id;
@@ -87,16 +99,82 @@ export function renderParameterForm(
 
   container.appendChild(form);
 
+  updateVisibility(form);
+
   form.addEventListener("change", () => {
+    updateVisibility(form);
     onChange(getParameterValues(form));
   });
 
   form.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     if (target.dataset.paramType !== "boolean") {
+      updateVisibility(form);
       onChange(getParameterValues(form));
     }
   });
+}
+
+function getDepthMap(parameters: ParameterDef[]): Map<string, number> {
+  const depths = new Map<string, number>();
+  for (const param of parameters) {
+    if (param.showWhen) {
+      depths.set(param.key, (depths.get(param.showWhen.key) ?? 0) + 1);
+    }
+  }
+  return depths;
+}
+
+function updateVisibility(form: HTMLFormElement): void {
+  const rows = form.querySelectorAll<HTMLDivElement>(".param-row");
+  const hiddenKeys = new Set<string>();
+
+  for (const row of rows) {
+    const depKey = row.dataset.showWhenKey;
+    if (!depKey) continue;
+
+    const depValue = row.dataset.showWhenValue!;
+    const paramKey = row.dataset.paramKey!;
+
+    // If the dependency itself is hidden, this param is also hidden
+    if (hiddenKeys.has(depKey)) {
+      hiddenKeys.add(paramKey);
+      if (!row.classList.contains("hidden")) {
+        row.classList.add("hidden");
+        resetToDefault(row);
+      }
+      continue;
+    }
+
+    // Get the current value of the dependency
+    const depEl = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-key="${depKey}"]`);
+    if (!depEl) continue;
+
+    const currentValue = depEl.dataset.paramType === "boolean"
+      ? String((depEl as HTMLInputElement).checked)
+      : depEl.value;
+
+    if (currentValue === depValue) {
+      row.classList.remove("hidden");
+    } else {
+      hiddenKeys.add(paramKey);
+      if (!row.classList.contains("hidden")) {
+        row.classList.add("hidden");
+        resetToDefault(row);
+      }
+    }
+  }
+}
+
+function resetToDefault(row: HTMLDivElement): void {
+  const el = row.querySelector<HTMLInputElement | HTMLSelectElement>("[data-key]");
+  if (!el) return;
+  const defaultVal = row.dataset.defaultValue!;
+  if (el.dataset.paramType === "boolean") {
+    (el as HTMLInputElement).checked = defaultVal === "true";
+  } else {
+    el.value = defaultVal;
+  }
 }
 
 function getParameterValues(form: HTMLFormElement): Record<string, unknown> {
@@ -105,7 +183,20 @@ function getParameterValues(form: HTMLFormElement): Record<string, unknown> {
   for (const el of elements) {
     const key = el.dataset.key!;
     const type = el.dataset.paramType;
-    if (type === "boolean") {
+    const row = el.closest<HTMLDivElement>(".param-row");
+    const isHidden = row?.classList.contains("hidden");
+
+    if (isHidden && row?.dataset.defaultValue !== undefined) {
+      const defaultVal = row.dataset.defaultValue;
+      if (type === "boolean") {
+        context[key] = defaultVal === "true";
+      } else if (type === "number") {
+        const num = Number(defaultVal);
+        context[key] = isNaN(num) ? 0 : num;
+      } else {
+        context[key] = defaultVal;
+      }
+    } else if (type === "boolean") {
       context[key] = (el as HTMLInputElement).checked;
     } else if (type === "number") {
       const num = Number(el.value);

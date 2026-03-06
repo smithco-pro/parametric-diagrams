@@ -15,17 +15,17 @@
     { "key": "enableUserAuth", "type": "boolean", "label": "User Auth Service", "defaultValue": true },
     { "key": "enableKerberosAuth", "type": "boolean", "label": "Kerberos Auth Service", "defaultValue": true },
     { "key": "enableVirtualApp", "type": "boolean", "label": "Virtual App Service", "defaultValue": true },
+    { "key": "enableHorizon", "type": "boolean", "label": "Horizon Integration", "defaultValue": false, "showWhen": { "key": "enableVirtualApp", "value": true } },
+    { "key": "enableCitrix", "type": "boolean", "label": "Citrix Integration", "defaultValue": false, "showWhen": { "key": "enableVirtualApp", "value": true } },
+    { "key": "citrixSFPort", "type": "number", "label": "Citrix StoreFront Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableCitrix", "value": true } },
     { "key": "enableKerberosLB", "type": "boolean", "label": "Load Balancer for Kerberos HA", "defaultValue": false },
-    { "key": "lbName", "type": "string", "label": "Load Balancer Label", "defaultValue": "Load Balancer" },
+    { "key": "lbName", "type": "string", "label": "Load Balancer Label", "defaultValue": "Load Balancer", "showWhen": { "key": "enableKerberosLB", "value": true } },
     { "key": "enableProxy", "type": "boolean", "label": "Outbound HTTP Proxy", "defaultValue": false },
     { "key": "enableRSA", "type": "boolean", "label": "RSA SecurID", "defaultValue": false },
-    { "key": "rsaPort", "type": "number", "label": "RSA SecurID Port", "defaultValue": 5555, "validation": { "min": 1, "max": 65535 } },
+    { "key": "rsaPort", "type": "number", "label": "RSA SecurID Port", "defaultValue": 5555, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableRSA", "value": true } },
     { "key": "enableSyslog", "type": "boolean", "label": "Syslog Server", "defaultValue": false },
-    { "key": "syslogPort", "type": "number", "label": "Syslog UDP Port", "defaultValue": 514, "validation": { "min": 1, "max": 65535 } },
-    { "key": "enableNTP", "type": "boolean", "label": "Show NTP Server", "defaultValue": true },
-    { "key": "enableHorizon", "type": "boolean", "label": "Horizon Integration", "defaultValue": false },
-    { "key": "enableCitrix", "type": "boolean", "label": "Citrix Integration", "defaultValue": false },
-    { "key": "citrixSFPort", "type": "number", "label": "Citrix StoreFront Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 } }
+    { "key": "syslogPort", "type": "number", "label": "Syslog UDP Port", "defaultValue": 514, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableSyslog", "value": true } },
+    { "key": "enableNTP", "type": "boolean", "label": "Show NTP Server", "defaultValue": true }
   ]
 }
 ---

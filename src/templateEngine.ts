@@ -11,6 +11,7 @@ export interface MmdxMeta {
     defaultValue: boolean | number | string;
     validation?: { min?: number; max?: number };
     options?: { label: string; value: string }[];
+    showWhen?: { key: string; value: boolean | number | string };
   }[];
 }
 

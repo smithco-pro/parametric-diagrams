@@ -56,6 +56,8 @@ The built-in types are `string`, `boolean`, `number`, and `select`. To add anoth
 
 4. **Add CSS** in `src/style.css` for the new control (follow existing `.param-row` patterns).
 
+New parameter types automatically support `showWhen` conditional visibility as long as the DOM element has `data-key` and `data-param-type` attributes set.
+
 The `select` type is a good reference implementation — it uses `{ label, value }` objects in an `options` array:
 
 ```json

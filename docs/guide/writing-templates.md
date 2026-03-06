@@ -77,7 +77,42 @@ You can nest conditionals:
 {{/if}}
 ```
 
-## 4. Test It
+## 4. Conditional Parameters
+
+Use `showWhen` to show a parameter only when another parameter has a specific value. This keeps the form clean by hiding irrelevant options.
+
+```json
+{
+  "parameters": [
+    { "key": "enableAuth", "type": "boolean", "label": "Enable Auth", "defaultValue": false },
+    { "key": "authProvider", "type": "select", "label": "Auth Provider", "defaultValue": "oauth",
+      "options": [
+        { "label": "OAuth 2.0", "value": "oauth" },
+        { "label": "SAML", "value": "saml" }
+      ],
+      "showWhen": { "key": "enableAuth", "value": true }
+    }
+  ]
+}
+```
+
+When `enableAuth` is `false`, the `authProvider` select is hidden and its `defaultValue` (`"oauth"`) is passed to the template.
+
+### Chained Dependencies
+
+Dependencies can be chained — if a parent is hidden, all its dependents are hidden too:
+
+```json
+{ "key": "enableVirtualApp", "type": "boolean", "label": "Virtual App Service", "defaultValue": true },
+{ "key": "enableCitrix", "type": "boolean", "label": "Citrix Integration", "defaultValue": false,
+  "showWhen": { "key": "enableVirtualApp", "value": true } },
+{ "key": "citrixPort", "type": "number", "label": "Citrix Port", "defaultValue": 443,
+  "showWhen": { "key": "enableCitrix", "value": true } }
+```
+
+Disabling `enableVirtualApp` hides both `enableCitrix` and `citrixPort`. Declare dependencies before dependents in the array.
+
+## 5. Test It
 
 Run `npm run dev` and select your new template from the dropdown. It appears automatically -- no code changes required.
 

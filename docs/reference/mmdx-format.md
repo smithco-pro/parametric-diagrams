@@ -49,6 +49,7 @@ Each entry in the `parameters` array has these fields:
 | `defaultValue` | `string \| boolean \| number` | Yes | Initial value when the template loads |
 | `validation` | `{ min?: number, max?: number }` | No | Min/max constraints (number type only) |
 | `options` | `{ label: string, value: string }[]` | No | Choices for select type (required when type is `"select"`) |
+| `showWhen` | `{ key: string, value: boolean \| number \| string }` | No | Show this parameter only when another parameter matches the specified value |
 
 ### Type Behavior
 
@@ -58,6 +59,19 @@ Each entry in the `parameters` array has these fields:
 | `boolean` | Toggle switch | Checked/unchecked state |
 | `number` | Number input with optional min/max | Parsed as `Number()`, falls back to `0` if NaN |
 | `select` | Dropdown (`<select>`) from `options` array | Option matching `defaultValue` is pre-selected |
+
+### Conditional Parameters
+
+Parameters can declare a dependency on another parameter using `showWhen`. The parameter row is hidden from the form when the condition is not met, and its `defaultValue` is used in the template context.
+
+```json
+{ "key": "rsaPort", "type": "number", "label": "RSA Port", "defaultValue": 5555,
+  "showWhen": { "key": "enableRSA", "value": true } }
+```
+
+`rsaPort` only appears when `enableRSA` is `true`. When hidden, the template receives the default value `5555`.
+
+Dependencies can be chained. If parameter B depends on A, and C depends on B, disabling A hides both B and C. Declare dependencies before their dependents in the `parameters` array.
 
 ## Template Body
 
