@@ -33,9 +33,18 @@ export function getSvgContent(container: HTMLElement): string | null {
 }
 
 export async function exportAsPng(container: HTMLElement): Promise<void> {
-  const svgContent = getSvgContent(container);
-  if (!svgContent) return;
+  const svg = container.querySelector("svg");
+  if (!svg) return;
 
+  const bbox = svg.getBoundingClientRect();
+  const width = bbox.width;
+  const height = bbox.height;
+
+  const clonedSvg = svg.cloneNode(true) as SVGSVGElement;
+  clonedSvg.setAttribute("width", `${width}`);
+  clonedSvg.setAttribute("height", `${height}`);
+
+  const svgContent = new XMLSerializer().serializeToString(clonedSvg);
   const svgBlob = new Blob([svgContent], {
     type: "image/svg+xml;charset=utf-8",
   });
@@ -43,14 +52,14 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
 
   const img = new Image();
   img.onload = () => {
+    const scale = 3;
     const canvas = document.createElement("canvas");
-    const scale = 2;
-    canvas.width = img.naturalWidth * scale;
-    canvas.height = img.naturalHeight * scale;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
 
     const ctx = canvas.getContext("2d")!;
     ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0, width, height);
     URL.revokeObjectURL(url);
 
     canvas.toBlob((blob) => {
