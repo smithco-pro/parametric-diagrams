@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appliance Diagram Generator</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <h1>&#x1f5a7; Appliance Diagram Generator</h1>
+
+    <div class="layout">
+      <!-- Left: Editor Panel -->
+      <div class="editor-panel">
+        <label for="template-select">Load Template:</label>
+        <select id="template-select">
+          <option value="">-- Select Template --</option>
+        </select>
+
+        <div id="parameters"></div>
+
+        <details id="resolved-output">
+          <summary>Resolved Mermaid</summary>
+          <pre id="resolved-text"></pre>
+        </details>
+
+        <div class="actions">
+          <button id="render-btn">Render Diagram</button>
+          <button id="export-svg-btn">Export SVG</button>
+          <button id="export-png-btn">Export PNG</button>
+        </div>
+      </div>
+
+      <!-- Right: Preview Panel -->
+      <div class="preview-panel">
+        <h2>Preview</h2>
+        <div id="mermaid-output"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

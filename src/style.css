@@ -1,0 +1,175 @@
+:root {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #e0e0e0;
+  background-color: #1a1a2e;
+}
+
+#app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+h1 { text-align: center; }
+
+.layout {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.editor-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.preview-panel {
+  flex: 1.5;
+  background: #16213e;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow: auto;
+  min-height: 500px;
+}
+
+select {
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #e0e0e0;
+  border: 1px solid #333;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #e94560;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+button:hover { background: #c73650; }
+
+#mermaid-output svg {
+  max-width: 100%;
+}
+
+/* Parameter form */
+.parameter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.param-row label {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.param-row input[type="text"],
+.param-row input[type="number"] {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+}
+
+.param-row input[type="text"]:focus,
+.param-row input[type="number"]:focus {
+  outline: none;
+  border-color: #e94560;
+}
+
+/* Toggle switch for booleans */
+.param-type-boolean {
+  position: relative;
+}
+
+.param-type-boolean input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch {
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  background: #333;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #e0e0e0;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+input[type="checkbox"]:checked + .toggle-switch {
+  background: #e94560;
+}
+
+input[type="checkbox"]:checked + .toggle-switch::after {
+  transform: translateX(20px);
+}
+
+/* Resolved Mermaid output */
+#resolved-output {
+  margin-top: 0.5rem;
+}
+
+#resolved-output summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #999;
+  user-select: none;
+}
+
+#resolved-output summary:hover {
+  color: #e0e0e0;
+}
+
+#resolved-text {
+  background: #0f3460;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,0 +1,28 @@
+---
+{
+  "name": "Deployment Flow",
+  "parameters": [
+    { "key": "devName", "type": "string", "label": "Developer Label", "defaultValue": "Developer" },
+    { "key": "repoName", "type": "string", "label": "Repository Name", "defaultValue": "Git Repo" },
+    { "key": "registryName", "type": "string", "label": "Registry Name", "defaultValue": "Artifact Registry" },
+    { "key": "enableStaging", "type": "boolean", "label": "Staging Environment", "defaultValue": true },
+    { "key": "enableApproval", "type": "boolean", "label": "Approval Gate", "defaultValue": true }
+  ]
+}
+---
+graph LR
+    Dev[{{devName}}] --> Repo[{{repoName}}]
+    Repo --> CI[CI Pipeline]
+    CI --> Build[Build Artifact]
+    Build --> Registry[{{registryName}}]
+    {{#if enableStaging}}
+    Registry --> Staging[Staging Appliance]
+    {{#if enableApproval}}
+    Staging -->|Approved| Prod[Production Appliance]
+    Staging -->|Rejected| Dev
+    {{else}}
+    Staging --> Prod[Production Appliance]
+    {{/if}}
+    {{else}}
+    Registry --> Prod[Production Appliance]
+    {{/if}}

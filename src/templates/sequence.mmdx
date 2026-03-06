@@ -1,0 +1,37 @@
+---
+{
+  "name": "Sequence Diagram",
+  "parameters": [
+    { "key": "clientName", "type": "string", "label": "Client Name", "defaultValue": "Client" },
+    { "key": "appName", "type": "string", "label": "Appliance Name", "defaultValue": "Appliance" },
+    { "key": "enableLB", "type": "boolean", "label": "Load Balancer", "defaultValue": true },
+    { "key": "enableDB", "type": "boolean", "label": "Database Query", "defaultValue": true }
+  ]
+}
+---
+sequenceDiagram
+    participant {{clientName}}
+    {{#if enableLB}}
+    participant LB as Load Balancer
+    {{/if}}
+    participant App as {{appName}}
+    {{#if enableDB}}
+    participant DB as Database
+    {{/if}}
+
+    {{#if enableLB}}
+    {{clientName}}->>LB: HTTPS Request
+    LB->>App: Forward Request
+    {{else}}
+    {{clientName}}->>App: HTTPS Request
+    {{/if}}
+    {{#if enableDB}}
+    App->>DB: Query Data
+    DB-->>App: Return Results
+    {{/if}}
+    {{#if enableLB}}
+    App-->>LB: JSON Response
+    LB-->>{{clientName}}: HTTPS Response
+    {{else}}
+    App-->>{{clientName}}: HTTPS Response
+    {{/if}}

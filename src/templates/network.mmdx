@@ -1,0 +1,42 @@
+---
+{
+  "name": "Network Topology",
+  "parameters": [
+    { "key": "lbName", "type": "string", "label": "Load Balancer Name", "defaultValue": "Load Balancer" },
+    { "key": "appNode1", "type": "boolean", "label": "App Node 1", "defaultValue": true },
+    { "key": "appNode2", "type": "boolean", "label": "App Node 2", "defaultValue": true },
+    { "key": "appNode3", "type": "boolean", "label": "App Node 3", "defaultValue": true },
+    { "key": "enableReplica", "type": "boolean", "label": "Replica DB", "defaultValue": true },
+    { "key": "enableCache", "type": "boolean", "label": "Redis Cache", "defaultValue": true }
+  ]
+}
+---
+graph TD
+    Internet[("Internet")] --> FW[Firewall]
+    FW --> LB[{{lbName}}]
+    {{#if appNode1}}
+    LB --> App1[Appliance Node 1]
+    App1 --> DB[(Primary DB)]
+    {{/if}}
+    {{#if appNode2}}
+    LB --> App2[Appliance Node 2]
+    App2 --> DB
+    {{/if}}
+    {{#if appNode3}}
+    LB --> App3[Appliance Node 3]
+    App3 --> DB
+    {{/if}}
+    {{#if enableReplica}}
+    DB --> Replica[(Replica DB)]
+    {{/if}}
+    {{#if enableCache}}
+    {{#if appNode1}}
+    App1 --> Cache[(Redis Cache)]
+    {{/if}}
+    {{#if appNode2}}
+    App2 --> Cache
+    {{/if}}
+    {{#if appNode3}}
+    App3 --> Cache
+    {{/if}}
+    {{/if}}
