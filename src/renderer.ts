@@ -36,9 +36,9 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
   const svg = container.querySelector("svg");
   if (!svg) return;
 
-  const bbox = svg.getBoundingClientRect();
-  const width = bbox.width;
-  const height = bbox.height;
+  const bbox = svg.getBBox();
+  const width = bbox.width || svg.getBoundingClientRect().width;
+  const height = bbox.height || svg.getBoundingClientRect().height;
 
   const clonedSvg = svg.cloneNode(true) as SVGSVGElement;
   clonedSvg.setAttribute("width", `${width}`);

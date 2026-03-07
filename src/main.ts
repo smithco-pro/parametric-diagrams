@@ -5,6 +5,7 @@ import { executeTemplate } from "./templateEngine";
 import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
 import { getStateFromURL, updateURL } from "./urlState";
+import { createPanZoom } from "./panZoom";
 
 const output = document.getElementById("mermaid-output") as HTMLDivElement;
 const templateSelect = document.getElementById("template-select") as HTMLSelectElement;
@@ -14,6 +15,8 @@ const templateNotes = document.getElementById("template-notes") as HTMLDivElemen
 const renderBtn = document.getElementById("render-btn") as HTMLButtonElement;
 const exportSvgBtn = document.getElementById("export-svg-btn") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("export-png-btn") as HTMLButtonElement;
+
+const panZoom = createPanZoom(output);
 
 let currentTemplate: DiagramTemplate | null = null;
 let currentTemplateKey = "";
@@ -27,11 +30,12 @@ for (const [key, tmpl] of Object.entries(templates)) {
   templateSelect.appendChild(option);
 }
 
-function updateDiagram(context: Record<string, unknown>): void {
+async function updateDiagram(context: Record<string, unknown>): Promise<void> {
   if (!currentTemplate) return;
   currentMermaid = executeTemplate(currentTemplate.compiled, context);
   resolvedText.textContent = currentMermaid;
-  renderDiagram(currentMermaid, output);
+  await renderDiagram(currentMermaid, output);
+  panZoom.wrap();
   updateURL(currentTemplateKey, context);
 
   if (currentTemplate.compiledNotes) {
@@ -59,6 +63,7 @@ function selectTemplate(
 
   currentTemplate = tmpl;
   currentTemplateKey = key;
+  panZoom.reset();
   renderParameterForm(
     parametersContainer,
     tmpl.parameters,
@@ -72,14 +77,20 @@ templateSelect.addEventListener("change", () => {
   selectTemplate(templateSelect.value);
 });
 
-renderBtn.addEventListener("click", () => {
-  if (currentMermaid) renderDiagram(currentMermaid, output);
+renderBtn.addEventListener("click", async () => {
+  if (currentMermaid) {
+    await renderDiagram(currentMermaid, output);
+    panZoom.wrap();
+  }
 });
 
-document.addEventListener("keydown", (e: KeyboardEvent) => {
+document.addEventListener("keydown", async (e: KeyboardEvent) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();
-    if (currentMermaid) renderDiagram(currentMermaid, output);
+    if (currentMermaid) {
+      await renderDiagram(currentMermaid, output);
+      panZoom.wrap();
+    }
   }
 });
 

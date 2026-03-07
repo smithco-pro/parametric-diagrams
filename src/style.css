@@ -30,8 +30,10 @@ h1 { text-align: center; }
   background: #16213e;
   border-radius: 8px;
   padding: 1rem;
-  overflow: auto;
+  overflow: hidden;
   min-height: 500px;
+  display: flex;
+  flex-direction: column;
 }
 
 select {
@@ -61,8 +63,52 @@ button {
 
 button:hover { background: #c73650; }
 
-#mermaid-output svg {
-  max-width: 100%;
+/* Pan/Zoom */
+#mermaid-output {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  border: 1px solid #1b2838;
+  border-radius: 6px;
+}
+
+#mermaid-output.panning {
+  cursor: grabbing;
+}
+
+.pan-zoom-wrapper {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.pan-zoom-wrapper svg {
+  max-width: none;
+}
+
+.zoom-controls {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.zoom-controls button {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  background: #0f3460;
+  min-width: 2rem;
+}
+
+.zoom-controls button:hover {
+  background: #1a4a8a;
+}
+
+.zoom-controls .zoom-level {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  color: #999;
+  align-self: center;
 }
 
 /* Parameter form */
