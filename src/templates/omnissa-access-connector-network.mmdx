@@ -1,17 +1,28 @@
 ---
 {
   "name": "Omnissa Access 24.12 Connector — Network Topology",
+  "notes": "<h4>Configuration Notes</h4><ul>{{#if (eq deploymentSize \"custom\")}}<li><b>Custom Sizing:</b> {{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk Space</li>{{/if}}<li><b>Processor Requirement:</b> Intel(R) Xeon(R) CPU E5-2650 0@2.00 GHz (2 processors) x64 bit or higher</li>{{#if enableDirSync}}{{#if (eq dirSyncMethod \"iwa\")}}<li><b>Directory Integration:</b> AD over IWA (domain-joined connector)</li>{{/if}}{{#if (eq dirSyncMethod \"ad-ldap\")}}<li><b>Directory Integration:</b> AD over LDAP (bind account)</li>{{/if}}{{#if (eq dirSyncMethod \"ldap\")}}<li><b>Directory Integration:</b> LDAP Directory</li>{{/if}}<li><b>Directory Sync Java Heap:</b> {{#if (eq deploymentSize \"custom\")}}Adjust as needed{{else}}{{#if (gt (countTrue enableDirSync enableUserAuth enableKerberosAuth enableVirtualApp) 1)}}{{#if (eq deploymentSize \"small\")}}<code>xmx=4g</code>{{/if}}{{#if (eq deploymentSize \"medium\")}}<code>xmx=8g</code>{{/if}}{{#if (eq deploymentSize \"large\")}}<code>xmx=12g</code>{{/if}}{{else}}{{#if (eq deploymentSize \"small\")}}<code>xmx=4g</code>{{/if}}{{#if (eq deploymentSize \"medium\")}}<code>xmx=4g</code>{{/if}}{{#if (eq deploymentSize \"large\")}}<code>xmx=8g</code>{{/if}}{{/if}}{{/if}}</li>{{/if}}{{#if enableUserAuth}}<li><b>User Auth Java Heap:</b> <code>xmx=1g</code></li>{{/if}}{{#if enableKerberosAuth}}<li><b>Kerberos Auth Java Heap:</b> <code>xmx=1g</code></li>{{/if}}{{#if enableVirtualApp}}<li><b>Virtual App Java Heap:</b> {{#if (gt (countTrue enableDirSync enableUserAuth enableKerberosAuth enableVirtualApp) 1)}}{{#if (eq deploymentSize \"small\")}}<code>xmx=1g</code>{{/if}}{{#if (or (eq deploymentSize \"medium\") (eq deploymentSize \"large\"))}}<code>xmx=2g</code>{{/if}}{{#if (eq deploymentSize \"custom\")}}Adjust as needed{{/if}}{{else}}<code>xmx=1g</code>{{/if}}</li>{{/if}}<li>Memory requirements include the OS and Omnissa Access connector components. Adjust if running other applications.</li><li>By default: Directory Sync <code>xmx=4g</code>, User Auth <code>xmx=1g</code>, Kerberos Auth <code>xmx=1g</code>, Virtual App <code>xmx=1g</code>.</li><li>Deployments with large or nested groups require more memory.</li>{{#if enableVirtualApp}}{{#if enableCitrix}}<li>For Citrix integrations, a maximum of 630 user or group entitlements is supported per resource.</li>{{/if}}{{/if}}{{#if (and enableUserAuth (not enableKerberosAuth))}}<li>User Auth and Kerberos Auth nodes are not vertically scalable. For better throughput, add more nodes.</li>{{/if}}{{#if enableKerberosAuth}}<li>User Auth and Kerberos Auth nodes are not vertically scalable. For better throughput, add more nodes.</li>{{/if}}</ul>",
   "parameters": [
     { "key": "connectorName", "type": "string", "label": "Connector Hostname", "defaultValue": "myconnector.example.com" },
     { "key": "connectorIP", "type": "string", "label": "Connector Static IP", "defaultValue": "10.28.128.3" },
     { "key": "deploymentSize", "type": "select", "label": "Deployment Sizing", "defaultValue": "small", "options": [
-      { "label": "Small: 2 vCPU, 8 GB RAM, 40 GB Disk (up to 50k users)", "value": "small" },
-      { "label": "Medium: 4 vCPU, 8 GB RAM, 40 GB Disk (up to 100k users)", "value": "medium" },
-      { "label": "Large: 8 vCPU, 12 GB RAM, 40 GB Disk (up to 200k users)", "value": "large" }
+      { "label": "Small", "value": "small" },
+      { "label": "Medium", "value": "medium" },
+      { "label": "Large", "value": "large" },
+      { "label": "Custom", "value": "custom" }
     ] },
+    { "key": "customVCPU", "type": "number", "label": "vCPU", "defaultValue": 4, "validation": { "min": 1 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "customRAM", "type": "number", "label": "RAM (GB)", "defaultValue": 8, "validation": { "min": 1 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "customDisk", "type": "number", "label": "Disk Space (GB)", "defaultValue": 50, "validation": { "min": 10 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "additionalComments", "type": "string", "label": "Additional Node Comments", "defaultValue": ""},
     { "key": "isCloud", "type": "boolean", "label": "Cloud Deployment", "defaultValue": true },
     { "key": "accessServiceHost", "type": "string", "label": "Access Service Host", "defaultValue": "access.example.com" },
     { "key": "enableDirSync", "type": "boolean", "label": "Directory Sync Service", "defaultValue": true },
+    { "key": "dirSyncMethod", "type": "select", "label": "Directory Integration Method", "defaultValue": "iwa", "options": [
+      { "label": "AD over LDAP", "value": "ad-ldap" },
+      { "label": "AD over IWA", "value": "iwa" },
+      { "label": "LDAP Directory", "value": "ldap" }
+    ], "showWhen": { "key": "enableDirSync", "value": true } },
     { "key": "enableUserAuth", "type": "boolean", "label": "User Auth Service", "defaultValue": true },
     { "key": "enableKerberosAuth", "type": "boolean", "label": "Kerberos Auth Service", "defaultValue": true },
     { "key": "enableVirtualApp", "type": "boolean", "label": "Virtual App Service", "defaultValue": true },
@@ -25,7 +36,8 @@
     { "key": "rsaPort", "type": "number", "label": "RSA SecurID Port", "defaultValue": 5555, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableRSA", "value": true } },
     { "key": "enableSyslog", "type": "boolean", "label": "Syslog Server", "defaultValue": false },
     { "key": "syslogPort", "type": "number", "label": "Syslog UDP Port", "defaultValue": 514, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableSyslog", "value": true } },
-    { "key": "enableNTP", "type": "boolean", "label": "Show NTP Server", "defaultValue": true }
+    { "key": "enableNTP", "type": "boolean", "label": "Show NTP Server", "defaultValue": true },
+    { "key": "includeFooterInChart", "type": "boolean", "label": "Include Footer Notes in Chart", "defaultValue": false }
   ]
 }
 ---
@@ -33,7 +45,7 @@ graph TD
     %% ═══════════════════════════════════════
     %%  CONNECTOR NODE
     %% ═══════════════════════════════════════
-    CONN[<b>Omnissa Access 24.12 Connector</b><br/>{{connectorName}} — {{connectorIP}}<br/>{{#if (eq deploymentSize "small")}}2 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "medium")}}4 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "large")}}8 vCPU, 12 GB RAM, 40 GB Disk{{/if}}<br/>TLS 1.2 + 1.3]
+    CONN[<b>Omnissa Access 24.12 Connector</b><br/>{{connectorName}} — {{connectorIP}}<br/>{{#if (eq deploymentSize "custom")}}{{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk{{else}}{{#if (gt (countTrue enableDirSync enableUserAuth enableKerberosAuth enableVirtualApp) 1)}}{{#if (eq deploymentSize "small")}}4 vCPU, 12 GB RAM, 50 GB Disk{{/if}}{{#if (eq deploymentSize "medium")}}8 vCPU, 16 GB RAM, 50 GB Disk{{/if}}{{#if (eq deploymentSize "large")}}12 vCPU, 32 GB RAM, 80 GB Disk{{/if}}{{else}}{{#if enableDirSync}}{{#if (eq deploymentSize "small")}}2 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "medium")}}4 vCPU, 8 GB RAM, 40 GB Disk{{/if}}{{#if (eq deploymentSize "large")}}8 vCPU, 12 GB RAM, 40 GB Disk{{/if}}{{/if}}{{#if (and enableUserAuth (not enableDirSync))}}2 vCPU, 4 GB RAM, 40 GB Disk{{/if}}{{#if (and enableKerberosAuth (and (not enableDirSync) (not enableUserAuth)))}}2 vCPU, 4 GB RAM, 40 GB Disk{{/if}}{{#if (and enableVirtualApp (and (not enableDirSync) (and (not enableUserAuth) (not enableKerberosAuth))))}}2 vCPU, 4 GB RAM, 40 GB Disk{{/if}}{{/if}}{{/if}}<br/>TLS 1.2 + 1.3{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
 
     %% ═══════════════════════════════════════
     %%  INBOUND — Kerberos Authentication
@@ -71,8 +83,14 @@ graph TD
     subgraph IDENTITY[Identity Infrastructure]
         DNS[🔍 DNS Server]
         {{#if enableDirSync}}
+        {{#if (eq dirSyncMethod "ldap")}}
+        AD[📂 LDAP Directory]
+        {{else}}
         AD[📂 Active Directory]
+        {{/if}}
+        {{#if (or (eq dirSyncMethod "iwa") enableUserAuth)}}
         DC[🖥️ Domain Controller]
+        {{/if}}
         {{else}}
         {{#if enableUserAuth}}
         AD[📂 Active Directory]
@@ -84,9 +102,19 @@ graph TD
     CONN -->|53 TCP/UDP<br/>All Services| DNS
 
     {{#if enableDirSync}}
+    {{#if (eq dirSyncMethod "ldap")}}
+    CONN -->|389, 636<br/>Dir Sync{{#if enableUserAuth}} + User Auth{{/if}}| AD
+    {{else}}
     CONN -->|389, 636, 3268, 3269<br/>Dir Sync{{#if enableUserAuth}} + User Auth{{/if}}| AD
-    CONN -->|88, 135, 445 TCP/UDP<br/>Dir Sync| DC
-    CONN -->|464 TCP/UDP<br/>Dir Sync{{#if enableUserAuth}} + User Auth{{/if}}| DC
+    {{/if}}
+    {{#if (eq dirSyncMethod "iwa")}}
+    CONN -->|88, 135, 445 TCP/UDP<br/>Dir Sync IWA| DC
+    CONN -->|464 TCP/UDP<br/>Dir Sync IWA{{#if enableUserAuth}} + User Auth{{/if}}| DC
+    {{else}}
+    {{#if enableUserAuth}}
+    CONN -->|464 TCP/UDP<br/>User Auth| DC
+    {{/if}}
+    {{/if}}
     {{else}}
     {{#if enableUserAuth}}
     CONN -->|389, 636, 3268, 3269<br/>User Auth| AD
@@ -137,6 +165,15 @@ graph TD
     {{#if enableNTP}}
     NTP[🕐 NTP Server]
     CONN -.->|123 UDP<br/>Time Sync| NTP
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FOOTER NOTES (in-diagram)
+    %% ═══════════════════════════════════════
+    {{#if includeFooterInChart}}
+    CONN ~~~ NOTES
+    NOTES[<b>Configuration Notes</b><br/>Processor: Intel Xeon E5-2650 or higher<br/>{{#if enableDirSync}}Dir Sync Heap: {{#if (eq deploymentSize "custom")}}adjust as needed{{else}}{{#if (gt (countTrue enableDirSync enableUserAuth enableKerberosAuth enableVirtualApp) 1)}}{{#if (eq deploymentSize "small")}}xmx=4g{{/if}}{{#if (eq deploymentSize "medium")}}xmx=8g{{/if}}{{#if (eq deploymentSize "large")}}xmx=12g{{/if}}{{else}}{{#if (eq deploymentSize "small")}}xmx=4g{{/if}}{{#if (eq deploymentSize "medium")}}xmx=4g{{/if}}{{#if (eq deploymentSize "large")}}xmx=8g{{/if}}{{/if}}{{/if}}<br/>{{/if}}{{#if enableUserAuth}}User Auth Heap: xmx=1g<br/>{{/if}}{{#if enableKerberosAuth}}Kerberos Auth Heap: xmx=1g<br/>{{/if}}{{#if enableVirtualApp}}Virtual App Heap: {{#if (gt (countTrue enableDirSync enableUserAuth enableKerberosAuth enableVirtualApp) 1)}}{{#if (eq deploymentSize "small")}}xmx=1g{{/if}}{{#if (or (eq deploymentSize "medium") (eq deploymentSize "large"))}}xmx=2g{{/if}}{{#if (eq deploymentSize "custom")}}adjust as needed{{/if}}{{else}}xmx=1g{{/if}}<br/>{{/if}}Memory includes OS + connector components<br/>{{#if (or enableUserAuth enableKerberosAuth)}}Auth nodes not vertically scalable — add more nodes for throughput{{/if}}]
+    style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 
     %% ═══════════════════════════════════════

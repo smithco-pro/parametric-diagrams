@@ -191,3 +191,42 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Template notes footer */
+#template-notes {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #0d1b2a;
+  border: 1px solid #1b2838;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #b0bec5;
+  line-height: 1.6;
+}
+
+#template-notes:empty {
+  display: none;
+}
+
+#template-notes h4 {
+  margin: 0 0 0.5rem 0;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+}
+
+#template-notes ul {
+  margin: 0.25rem 0 0.75rem 1.25rem;
+  padding: 0;
+}
+
+#template-notes li {
+  margin-bottom: 0.25rem;
+}
+
+#template-notes code {
+  background: #1a2940;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+}

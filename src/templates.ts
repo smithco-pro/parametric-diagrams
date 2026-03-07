@@ -8,6 +8,7 @@ export interface DiagramTemplate {
   name: string;
   template: string;
   compiled: HandlebarsTemplateDelegate;
+  compiledNotes?: HandlebarsTemplateDelegate;
   parameters: ParameterDef[];
 }
 
@@ -17,6 +18,7 @@ function loadTemplate(raw: string): DiagramTemplate {
     name: meta.name,
     template,
     compiled: compileTemplate(template),
+    compiledNotes: meta.notes ? compileTemplate(meta.notes) : undefined,
     parameters: meta.parameters,
   };
 }

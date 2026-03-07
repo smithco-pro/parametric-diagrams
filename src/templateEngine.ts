@@ -1,9 +1,18 @@
 import Handlebars from "handlebars";
 
 Handlebars.registerHelper("eq", (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper("gt", (a: unknown, b: unknown) => Number(a) > Number(b));
+Handlebars.registerHelper("not", (a: unknown) => !a);
+Handlebars.registerHelper("and", (a: unknown, b: unknown) => a && b);
+Handlebars.registerHelper("or", (a: unknown, b: unknown) => a || b);
+Handlebars.registerHelper("countTrue", function (...args: unknown[]) {
+  // Last arg is Handlebars options hash — skip it
+  return args.slice(0, -1).filter(Boolean).length;
+});
 
 export interface MmdxMeta {
   name: string;
+  notes?: string;
   parameters: {
     key: string;
     type: "boolean" | "number" | "string" | "select";

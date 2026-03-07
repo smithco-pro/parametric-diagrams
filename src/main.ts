@@ -10,6 +10,7 @@ const output = document.getElementById("mermaid-output") as HTMLDivElement;
 const templateSelect = document.getElementById("template-select") as HTMLSelectElement;
 const parametersContainer = document.getElementById("parameters") as HTMLDivElement;
 const resolvedText = document.getElementById("resolved-text") as HTMLPreElement;
+const templateNotes = document.getElementById("template-notes") as HTMLDivElement;
 const renderBtn = document.getElementById("render-btn") as HTMLButtonElement;
 const exportSvgBtn = document.getElementById("export-svg-btn") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("export-png-btn") as HTMLButtonElement;
@@ -32,6 +33,14 @@ function updateDiagram(context: Record<string, unknown>): void {
   resolvedText.textContent = currentMermaid;
   renderDiagram(currentMermaid, output);
   updateURL(currentTemplateKey, context);
+
+  if (currentTemplate.compiledNotes) {
+    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, context);
+    templateNotes.style.display = "";
+  } else {
+    templateNotes.innerHTML = "";
+    templateNotes.style.display = "none";
+  }
 }
 
 function selectTemplate(
