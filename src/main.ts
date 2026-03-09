@@ -6,6 +6,7 @@ import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
 import { getStateFromURL, updateURL } from "./urlState";
 import { createPanZoom } from "./panZoom";
+import { initRouter } from "./router";
 
 const output = document.getElementById("mermaid-output") as HTMLDivElement;
 const templateSelect = document.getElementById("template-select") as HTMLSelectElement;
@@ -109,6 +110,8 @@ exportSvgBtn.addEventListener("click", () => {
 exportPngBtn.addEventListener("click", () => {
   exportAsPng(output);
 });
+
+initRouter();
 
 // Check URL for template and parameter overrides, otherwise auto-select first
 const urlState = getStateFromURL();

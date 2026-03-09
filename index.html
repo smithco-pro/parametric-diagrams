@@ -8,38 +8,56 @@
 </head>
 <body>
   <div id="app">
-    <h1>&#x1f5a7; Appliance Diagram Generator</h1>
+    <nav class="top-nav">
+      <span class="nav-brand">&#x1f5a7; Parametric Diagrams</span>
+      <div class="nav-links">
+        <a href="#" data-route="/">Diagrams</a>
+        <a href="#" data-docs>Docs</a>
+        <a href="#" data-route="/about">About Me</a>
+      </div>
+    </nav>
 
-    <div class="layout">
-      <!-- Left: Editor Panel -->
-      <div class="editor-panel">
-        <label for="template-select">Load Template:</label>
-        <select id="template-select">
-          <option value="">-- Select Template --</option>
-        </select>
+    <div id="page-diagrams" class="page">
+      <h1>&#x1f5a7; Appliance Diagram Generator</h1>
 
-        <div id="parameters"></div>
+      <div class="layout">
+        <!-- Left: Editor Panel -->
+        <div class="editor-panel">
+          <label for="template-select">Load Template:</label>
+          <select id="template-select">
+            <option value="">-- Select Template --</option>
+          </select>
 
-        <details id="resolved-output">
-          <summary>Resolved Mermaid</summary>
-          <pre id="resolved-text"></pre>
-        </details>
+          <div id="parameters"></div>
 
-        <div class="actions">
-          <button id="render-btn">Render Diagram</button>
-          <button id="export-svg-btn">Export SVG</button>
-          <button id="export-png-btn">Export PNG</button>
+          <details id="resolved-output">
+            <summary>Resolved Mermaid</summary>
+            <pre id="resolved-text"></pre>
+          </details>
+
+          <div class="actions">
+            <button id="render-btn">Render Diagram</button>
+            <button id="export-svg-btn">Export SVG</button>
+            <button id="export-png-btn">Export PNG</button>
+          </div>
+        </div>
+
+        <!-- Right: Preview Panel -->
+        <div class="preview-panel">
+          <h2>Preview</h2>
+          <div id="mermaid-output"></div>
         </div>
       </div>
 
-      <!-- Right: Preview Panel -->
-      <div class="preview-panel">
-        <h2>Preview</h2>
-        <div id="mermaid-output"></div>
-      </div>
+      <div id="template-notes"></div>
     </div>
 
-    <div id="template-notes"></div>
+    <div id="page-about" class="page" style="display: none;">
+      <h1>About Me</h1>
+      <div class="about-content">
+        <p>Welcome! This section is coming soon.</p>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

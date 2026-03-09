@@ -7,6 +7,9 @@ export default withMermaid(
     description:
       "Generate parameterized Mermaid diagrams with Handlebars templates",
     base: "/parametric-diagrams/docs/",
+    vite: {
+      server: { port: 5175, strictPort: true },
+    },
     themeConfig: {
       nav: [
         { text: "Guide", link: "/guide/getting-started" },
