@@ -140,3 +140,86 @@ Reads the current URL query string and returns the template key and parameter ov
 #### `updateURL(templateKey: string, paramValues: Record<string, unknown>): void`
 
 Writes the current template key and all parameter values to the URL query string using `history.replaceState`. This updates the address bar without triggering a page reload or adding a history entry, making the URL always shareable.
+
+## Pan & Zoom (`src/panZoom.ts`)
+
+### Interfaces
+
+```ts
+interface PanZoomState {
+  scale: number;
+  x: number;
+  y: number;
+}
+```
+
+### Constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `MIN_SCALE` | `0.1` | Minimum zoom level (10%) |
+| `MAX_SCALE` | `5.0` | Maximum zoom level (500%) |
+| `ZOOM_FACTOR` | `1.2` | Multiplier per zoom step |
+
+### Class: `PanZoomController`
+
+#### `wrap(): void`
+
+Call after each `renderDiagram()` to wrap the rendered SVG in a `<div class="pan-zoom-wrapper">` and apply the current CSS transform. If the SVG is already wrapped, this is a no-op.
+
+#### `reset(): void`
+
+Resets scale to 1 and translation to (0, 0).
+
+### Factory
+
+#### `createPanZoom(container: HTMLElement): PanZoomController`
+
+Creates a `PanZoomController` for the given container element. Inserts zoom control buttons (+, −, Reset, percentage label) before the container and attaches all event listeners.
+
+### Interactions
+
+| Input | Behavior |
+|-------|----------|
+| Ctrl + mouse wheel | Zoom in/out centered on cursor position |
+| Click and drag | Pan the diagram |
+| Two-finger pinch (touch) | Zoom centered on pinch midpoint |
+| Zoom buttons (+/−/Reset) | Zoom in, zoom out, or reset to 100% |
+
+## Router (`src/router.ts`)
+
+### Functions
+
+#### `initRouter(): void`
+
+Initializes client-side routing. Call once at startup. Sets up:
+
+1. **Internal route navigation** -- Click handlers on `<a data-route="...">` elements. Uses `history.pushState` for clean URL updates without page reloads.
+2. **Docs link** -- Click handler on `<a data-docs>` navigates externally to the VitePress docs site. Handled separately to prevent query parameter leakage from the main app.
+3. **Browser history** -- `popstate` listener for back/forward button support.
+4. **GitHub Pages fallback** -- Recovers from 404 redirects by reading a `?route=` query parameter and replacing the URL.
+
+### Route Mapping
+
+| Route | Page Element | Description |
+|-------|-------------|-------------|
+| `/` | `#page-diagrams` | Main diagram editor (default) |
+| `/about` | `#page-about` | About page |
+
+### HTML Contract
+
+Navigation links must use `data-route` or `data-docs` attributes:
+
+```html
+<nav>
+  <a href="#" data-route="/">Diagrams</a>
+  <a href="#" data-docs>Docs</a>
+  <a href="#" data-route="/about">About Me</a>
+</nav>
+```
+
+Pages are `<div>` elements with class `page` and matching IDs (`page-diagrams`, `page-about`). The router toggles their `display` style.
+
+### Base URL
+
+The router reads `import.meta.env.BASE_URL` to support deployments in subdirectories (e.g., `/parametric-diagrams/`). All route comparisons and `pushState` calls are prefixed with this base.

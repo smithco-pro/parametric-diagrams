@@ -48,6 +48,8 @@ src/
   renderer.ts          # Mermaid rendering and SVG/PNG export
   parameterUI.ts       # Parameter form UI generation
   urlState.ts          # URL query parameter state sync
+  panZoom.ts           # Pan/zoom controls for diagram preview
+  router.ts            # Client-side page routing (navbar)
   style.css            # Application styling
   templates/           # .mmdx template files (auto-discovered)
 ```
