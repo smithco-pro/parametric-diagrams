@@ -171,7 +171,7 @@ export class PanZoomController {
   }
 }
 
-function clamp(val: number, min: number, max: number): number {
+export function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val));
 }
 
