@@ -120,6 +120,6 @@ if (urlState.template && templates[urlState.template]) {
   templateSelect.value = urlState.template;
   selectTemplate(urlState.template, paramOverrides);
 } else if (templateSelect.options.length > 1) {
-  templateSelect.value = templateSelect.options[1].value;
+  templateSelect.value = templateSelect.options[3].value;
   selectTemplate(templateSelect.value);
 }
