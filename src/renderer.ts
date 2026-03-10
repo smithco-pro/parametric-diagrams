@@ -43,14 +43,31 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
   const clonedSvg = svg.cloneNode(true) as SVGSVGElement;
   clonedSvg.setAttribute("width", `${width}`);
   clonedSvg.setAttribute("height", `${height}`);
+  clonedSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clonedSvg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+
+  // Inline computed styles so they survive the <img> isolation boundary
+  // (Chrome/Safari strip styles when rendering SVG in <img>)
+  const originalElements = svg.querySelectorAll("*");
+  const clonedElements = clonedSvg.querySelectorAll("*");
+  for (let i = 0; i < originalElements.length; i++) {
+    const computed = getComputedStyle(originalElements[i]);
+    (clonedElements[i] as HTMLElement | SVGElement).setAttribute(
+      "style",
+      computed.cssText
+    );
+  }
 
   const svgContent = new XMLSerializer().serializeToString(clonedSvg);
-  const svgBlob = new Blob([svgContent], {
-    type: "image/svg+xml;charset=utf-8",
-  });
-  const url = URL.createObjectURL(svgBlob);
+  // Use base64 data URL instead of blob URL for cross-browser compatibility
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(svgContent);
+  const base64 = btoa(String.fromCharCode(...bytes));
+  const dataUrl = `data:image/svg+xml;base64,${base64}`;
 
   const img = new Image();
+  img.crossOrigin = "anonymous";
+
   img.onload = () => {
     const scale = 3;
     const canvas = document.createElement("canvas");
@@ -60,7 +77,6 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
     const ctx = canvas.getContext("2d")!;
     ctx.scale(scale, scale);
     ctx.drawImage(img, 0, 0, width, height);
-    URL.revokeObjectURL(url);
 
     canvas.toBlob((blob) => {
       if (!blob) return;
@@ -72,5 +88,9 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
     }, "image/png");
   };
 
-  img.src = url;
+  img.onerror = () => {
+    console.error("Failed to load SVG for PNG export");
+  };
+
+  img.src = dataUrl;
 }
