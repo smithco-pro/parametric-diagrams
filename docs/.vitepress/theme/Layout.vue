@@ -16,8 +16,12 @@ const mainSiteRoot = computed(() => {
   return base.value.replace(/docs\/$/, '')
 })
 
+// Use query param routing for About Me so the main site's SPA router
+// handles it directly, without relying on GitHub Pages 404 redirect
 const diagramsLink = computed(() => mainSiteRoot.value)
-const aboutLink = computed(() => mainSiteRoot.value + 'about')
+const aboutLink = computed(() =>
+  mainSiteRoot.value + '?route=' + encodeURIComponent(mainSiteRoot.value + 'about')
+)
 
 const docSections = computed(() => [
   { text: 'Guide', link: base.value + 'guide/getting-started.html', match: '/guide/' },
