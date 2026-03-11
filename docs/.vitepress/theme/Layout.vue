@@ -38,6 +38,7 @@ const navigate = (url) => {
 <template>
   <Layout>
     <template #layout-top>
+      <div class="nav-wrapper">
       <div class="site-top-nav">
         <span class="nav-brand">&#x1f5a7; Parametric Diagrams</span>
         <div class="nav-docs">
@@ -53,6 +54,7 @@ const navigate = (url) => {
           <a href="javascript:void(0)" class="active">Docs</a>
           <a :href="aboutLink" @click.prevent="navigate(aboutLink)">About Me</a>
         </div>
+      </div>
       </div>
     </template>
   </Layout>
