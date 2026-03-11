@@ -1,0 +1,176 @@
+/* === VitePress CSS variable overrides === */
+:root {
+  /* Brand colors */
+  --vp-c-brand-1: #e94560;
+  --vp-c-brand-2: #d63d56;
+  --vp-c-brand-3: #c73650;
+  --vp-c-brand-soft: rgba(233, 69, 96, 0.14);
+
+  /* Backgrounds */
+  --vp-c-bg: #1a1a2e;
+  --vp-c-bg-soft: #16213e;
+  --vp-c-bg-mute: #0f3460;
+  --vp-c-bg-alt: #16213e;
+  --vp-c-bg-elv: #16213e;
+  --vp-c-gutter: #1a1a2e;
+
+  /* Text */
+  --vp-c-text-1: #e0e0e0;
+  --vp-c-text-2: #b0bec5;
+  --vp-c-text-3: #999;
+
+  /* Borders */
+  --vp-c-border: #0f3460;
+  --vp-c-divider: #0f3460;
+
+  /* Nav & Sidebar */
+  --vp-nav-bg-color: #16213e;
+  --vp-sidebar-bg-color: #16213e;
+
+  /* Code */
+  --vp-code-bg: #0f3460;
+  --vp-code-color: #e0e0e0;
+  --vp-code-block-bg: #0d1b2a;
+
+  /* Fonts */
+  --vp-font-family-base: 'Segoe UI', system-ui, sans-serif;
+  --vp-font-family-mono: 'Fira Code', monospace;
+
+  /* Button */
+  --vp-button-brand-bg: #e94560;
+  --vp-button-brand-hover-bg: #c73650;
+  --vp-button-brand-active-bg: #b52e45;
+  --vp-button-brand-text: #fff;
+
+  /* Home hero */
+  --vp-home-hero-name-color: #e0e0e0;
+}
+
+.dark {
+  --vp-c-brand-1: #e94560;
+  --vp-c-brand-2: #d63d56;
+  --vp-c-brand-3: #c73650;
+  --vp-c-brand-soft: rgba(233, 69, 96, 0.14);
+
+  --vp-c-bg: #1a1a2e;
+  --vp-c-bg-soft: #16213e;
+  --vp-c-bg-mute: #0f3460;
+  --vp-c-bg-alt: #16213e;
+  --vp-c-bg-elv: #16213e;
+  --vp-c-gutter: #1a1a2e;
+
+  --vp-c-text-1: #e0e0e0;
+  --vp-c-text-2: #b0bec5;
+  --vp-c-text-3: #999;
+
+  --vp-c-border: #0f3460;
+  --vp-c-divider: #0f3460;
+
+  --vp-nav-bg-color: #16213e;
+  --vp-sidebar-bg-color: #16213e;
+
+  --vp-code-bg: #0f3460;
+  --vp-code-color: #e0e0e0;
+  --vp-code-block-bg: #0d1b2a;
+
+  --vp-button-brand-bg: #e94560;
+  --vp-button-brand-hover-bg: #c73650;
+  --vp-button-brand-active-bg: #b52e45;
+  --vp-button-brand-text: #fff;
+}
+
+/* Hide dark mode toggle since site is always dark */
+.VPSwitchAppearance {
+  display: none !important;
+}
+
+/* Hide VitePress default navbar — replaced by our merged navbar */
+.VPNav {
+  display: none !important;
+}
+
+/* Reset nav height offset so content doesn't have dead space */
+:root {
+  --vp-nav-height: 0px;
+}
+
+/* Adjust layout top padding for our custom nav */
+.VPLocalNav {
+  top: 0 !important;
+}
+
+/* === Shared top navbar (matches main site) === */
+.site-top-nav {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background: #16213e;
+  border-radius: 8px;
+  max-width: 1400px;
+  margin: 1rem auto 0;
+  width: calc(100% - 3rem);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 1rem;
+}
+
+.site-top-nav .nav-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+/* Doc section links (Guide, Reference, Architecture) */
+.site-top-nav .nav-docs {
+  display: flex;
+  gap: 0.25rem;
+  margin-right: auto;
+}
+
+.site-top-nav .nav-docs a {
+  color: #b0bec5;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s, background 0.2s;
+}
+
+.site-top-nav .nav-docs a:hover {
+  color: #e0e0e0;
+  background: #0f3460;
+}
+
+.site-top-nav .nav-docs a.active-section {
+  color: #e0e0e0;
+  background: #0f3460;
+}
+
+/* Site-wide links (Diagrams, Docs, About Me) */
+.site-top-nav .nav-links {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.site-top-nav .nav-links a {
+  color: #b0bec5;
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s, background 0.2s;
+}
+
+.site-top-nav .nav-links a:hover {
+  color: #e0e0e0;
+  background: #0f3460;
+}
+
+.site-top-nav .nav-links a.active {
+  color: #fff;
+  background: #e94560;
+}
