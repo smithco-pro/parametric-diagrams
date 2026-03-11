@@ -28,6 +28,11 @@ const docSections = computed(() => [
 const isActiveSection = (match) => {
   return route.path.includes(match)
 }
+
+// Force full-page navigation to bypass VitePress's SPA router
+const navigate = (url) => {
+  window.location.href = url
+}
 </script>
 
 <template>
@@ -44,9 +49,9 @@ const isActiveSection = (match) => {
           >{{ section.text }}</a>
         </div>
         <div class="nav-links">
-          <a :href="diagramsLink">Diagrams</a>
+          <a :href="diagramsLink" @click.prevent="navigate(diagramsLink)">Diagrams</a>
           <a href="javascript:void(0)" class="active">Docs</a>
-          <a :href="aboutLink">About Me</a>
+          <a :href="aboutLink" @click.prevent="navigate(aboutLink)">About Me</a>
         </div>
       </div>
     </template>
