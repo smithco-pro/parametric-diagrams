@@ -89,14 +89,19 @@
   display: none !important;
 }
 
-/* Reset nav height offset so content doesn't have dead space */
+/* Account for our custom navbar height */
 :root {
   --vp-nav-height: 0px;
+  --vp-layout-top-height: 60px;
 }
 
 /* Adjust layout top padding for our custom nav */
 .VPLocalNav {
-  top: 0 !important;
+  top: 60px !important;
+}
+
+.VPSidebar {
+  padding-top: 60px !important;
 }
 
 /* === Shared top navbar (matches main site) === */
