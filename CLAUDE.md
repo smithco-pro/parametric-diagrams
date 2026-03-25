@@ -67,6 +67,15 @@ graph LR
 
 Registered in `templateEngine.ts`: `eq`, `gt`, `not`, `and`, `or`, `countTrue`
 
+## Editing Template Notes
+
+Templates may display notes in **two independent places** that must be kept in sync:
+
+1. **`notes` field** (JSON frontmatter) — rendered as HTML into `div#template-notes` below the diagram
+2. **`NOTES` node** (Mermaid body, gated by `includeFooterInChart`) — rendered as a styled node inside the diagram SVG
+
+These use different markup (HTML vs Mermaid node labels) and follow separate rendering paths. When updating informational content like sizing specs or configuration details, **update both locations**. Also note that Mermaid node labels cannot contain `|` (pipe) characters — use `—` or `<br/>` as separators instead.
+
 ## Key Architecture Notes
 
 - **Template compilation** is cached in a Map to avoid recompiling
