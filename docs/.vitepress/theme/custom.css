@@ -101,9 +101,15 @@
 }
 
 .VPSidebar {
-  padding-top: 0px !important;
-  top: 60px !important;
-  height: calc(100vh - 60px) !important;
+  padding-top: 60px !important;
+}
+
+/* Full-width wrapper behind the nav to block sidebar background bleed */
+.nav-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--vp-c-bg);
 }
 
 /* === Shared top navbar (matches main site) === */
@@ -116,9 +122,6 @@
   max-width: 1400px;
   margin: 1rem auto 0;
   width: calc(100% - 3rem);
-  position: sticky;
-  top: 0;
-  z-index: 100;
   gap: 1rem;
 }
 
