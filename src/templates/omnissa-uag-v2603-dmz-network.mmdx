@@ -1,0 +1,341 @@
+---
+{
+  "name": "Omnissa UAG 2603 — DMZ Network Topology",
+  "notes": "<h4>DMZ Deployment Notes</h4><ul><li><b>Appliance Sizing:</b> {{#if (eq deploymentSize \"custom\")}}{{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk{{/if}}{{#if (eq deploymentSize \"standard\")}}2 vCPU, 4 GB RAM, 20 GB Disk (standard Horizon / reverse-proxy footprint){{/if}}{{#if (eq deploymentSize \"large\")}}4 vCPU, 16 GB RAM, 20 GB Disk (mixed Edge Services or larger SEG/Tunnel workloads){{/if}}{{#if (eq deploymentSize \"extra-large\")}}8 vCPU, 32 GB RAM, 20 GB Disk (high-throughput SEG or many concurrent Edge Services){{/if}}</li>{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 2)}}<li><b>Multiple Edge Services detected</b> — consider sizing up one tier and verifying TLS Port Sharing requirements (unique DNS per service when sharing 443).</li>{{/if}}<li><b>Two-firewall sandwich:</b> Front-end firewall permits only required Internet→DMZ ports; back-end firewall permits only traffic originating from the UAG in the DMZ.</li><li><b>DNS (53 UDP):</b> Required by all UAG services — ensure the front-end firewall does not block UDP 53 requests/replies.</li>{{#if enableHorizon}}<li><b>Horizon:</b> Port 443 UDP is internally forwarded to UDP 9443 on the UAG UDP Tunnel Server. If Blast uses TCP 443, opening 8443 externally is not required.</li>{{/if}}{{#if enableTunnel}}<li><b>Per-App Tunnel:</b> When Internet-facing port 443 is used, Per-App Tunnel listens on 8443 internally. AWCM/REST API port: {{#if (eq tunnelEnv \"saas\")}}SaaS 443{{else}}On-Prem 2001 (AWCM), 80/443 (REST API){{/if}}.</li>{{/if}}{{#if enableSEG}}<li><b>Secure Email Gateway:</b> UAG routes inbound {{segListenerPort}}/HTTPS internally to 11443. Port 44444 is used by SEG for diagnostics/admin on the appliance itself.</li>{{/if}}{{#if enableContentGateway}}<li><b>Content Gateway:</b> UAG routes inbound {{cgEndpointPort}}/HTTPS internally to 10443. CG runs as non-root — custom ports must be &gt; 1024.</li>{{/if}}<li>Reference: Omnissa Unified Access Gateway 2603 Product Documentation — Firewall rules for DMZ-based Unified Access Gateway appliances.</li></ul>",
+  "parameters": [
+    { "key": "uagName", "type": "string", "label": "UAG Hostname", "defaultValue": "uag.example.com" },
+    { "key": "uagIP", "type": "string", "label": "UAG DMZ IP", "defaultValue": "10.20.30.10" },
+    { "key": "deploymentSize", "type": "select", "label": "Deployment Sizing", "defaultValue": "standard", "options": [
+      { "label": "Standard (2 vCPU / 4 GB)", "value": "standard" },
+      { "label": "Large (4 vCPU / 16 GB)", "value": "large" },
+      { "label": "Extra Large (8 vCPU / 32 GB)", "value": "extra-large" },
+      { "label": "Custom", "value": "custom" }
+    ] },
+    { "key": "customVCPU", "type": "number", "label": "vCPU", "defaultValue": 4, "validation": { "min": 1 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "customRAM", "type": "number", "label": "RAM (GB)", "defaultValue": 16, "validation": { "min": 1 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "customDisk", "type": "number", "label": "Disk Space (GB)", "defaultValue": 20, "validation": { "min": 10 }, "showWhen": { "key": "deploymentSize", "value": "custom" } },
+    { "key": "additionalComments", "type": "string", "label": "Additional Node Comments", "defaultValue": "" },
+    { "key": "showFirewalls", "type": "boolean", "label": "Show Front-End / Back-End Firewalls", "defaultValue": true },
+
+    { "key": "enableHorizon", "type": "boolean", "label": "Horizon Edge Service", "defaultValue": true },
+    { "key": "horizonBlastTCP8443", "type": "boolean", "label": "Blast Extreme on TCP 8443 (optional)", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+    { "key": "horizonBlastUDP8443", "type": "boolean", "label": "Blast Extreme on UDP 8443 (optional)", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+    { "key": "horizonPCoIP", "type": "boolean", "label": "PCoIP (4172) — optional", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+    { "key": "horizonRDP", "type": "boolean", "label": "RDP (3389) to desktops", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+    { "key": "horizonUSBRedirection", "type": "boolean", "label": "USB Redirection (32111)", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+    { "key": "horizonMMR", "type": "boolean", "label": "MMR / CDR / HTML5 (9427)", "defaultValue": false, "showWhen": { "key": "enableHorizon", "value": true } },
+
+    { "key": "enableWebReverseProxy", "type": "boolean", "label": "Web Reverse Proxy", "defaultValue": false },
+    { "key": "wrpIntranetPort", "type": "number", "label": "Intranet Backend Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableWebReverseProxy", "value": true } },
+    { "key": "wrpIdentityBridging", "type": "boolean", "label": "Identity Bridging (SAML/Cert → Kerberos)", "defaultValue": false, "showWhen": { "key": "enableWebReverseProxy", "value": true } },
+
+    { "key": "enableTunnel", "type": "boolean", "label": "Per-App Tunnel", "defaultValue": false },
+    { "key": "tunnelTopology", "type": "select", "label": "Tunnel Topology", "defaultValue": "basic", "options": [
+      { "label": "Basic (single tunnel in DMZ)", "value": "basic" },
+      { "label": "Cascade (Front-End in DMZ → Back-End internal)", "value": "cascade" },
+      { "label": "Front-End / Back-End", "value": "frontend-backend" }
+    ], "showWhen": { "key": "enableTunnel", "value": true } },
+    { "key": "tunnelEnv", "type": "select", "label": "AWCM / UEM Environment", "defaultValue": "saas", "options": [
+      { "label": "SaaS (AWCM 443)", "value": "saas" },
+      { "label": "On-Prem (AWCM 2001)", "value": "on-prem" }
+    ], "showWhen": { "key": "enableTunnel", "value": true } },
+    { "key": "tunnelInternalCascadePort", "type": "number", "label": "Cascade FE→BE Port", "defaultValue": 8443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "tunnelTopology", "value": "cascade" } },
+    { "key": "tunnelInternalFEBEPort", "type": "number", "label": "Front-End → Back-End Port", "defaultValue": 2010, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "tunnelTopology", "value": "frontend-backend" } },
+    { "key": "tunnelSyslogEnabled", "type": "boolean", "label": "Tunnel Syslog (514 UDP)", "defaultValue": false, "showWhen": { "key": "enableTunnel", "value": true } },
+
+    { "key": "enableSEG", "type": "boolean", "label": "Secure Email Gateway (SEG)", "defaultValue": false },
+    { "key": "segListenerPort", "type": "number", "label": "SEG Listener Port (external)", "defaultValue": 443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableSEG", "value": true } },
+    { "key": "segKerberosKCD", "type": "boolean", "label": "SEG Kerberos KCD Authentication", "defaultValue": false, "showWhen": { "key": "enableSEG", "value": true } },
+    { "key": "segCluster", "type": "boolean", "label": "SEG Cluster (5701 Hazelcast, 41232 Vertx)", "defaultValue": false, "showWhen": { "key": "enableSEG", "value": true } },
+    { "key": "segENS", "type": "boolean", "label": "Email Notification Service (ENS) inbound", "defaultValue": false, "showWhen": { "key": "enableSEG", "value": true } },
+
+    { "key": "enableContentGateway", "type": "boolean", "label": "Content Gateway", "defaultValue": false },
+    { "key": "cgConfigType", "type": "select", "label": "Content Gateway Config Type", "defaultValue": "basic", "options": [
+      { "label": "Basic Endpoint", "value": "basic" },
+      { "label": "Relay Endpoint", "value": "relay" }
+    ], "showWhen": { "key": "enableContentGateway", "value": true } },
+    { "key": "cgEndpointPort", "type": "number", "label": "CG Endpoint Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableContentGateway", "value": true } },
+    { "key": "cgRelayPort", "type": "number", "label": "CG Relay Port", "defaultValue": 443, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "cgConfigType", "value": "relay" } },
+    { "key": "cgFileShares", "type": "boolean", "label": "SMB / CIFS File Shares (137-139, 445)", "defaultValue": false, "showWhen": { "key": "enableContentGateway", "value": true } },
+
+    { "key": "enableIntelligence", "type": "boolean", "label": "Workspace ONE Intelligence", "defaultValue": false },
+    { "key": "enableOPSWAT", "type": "boolean", "label": "OPSWAT Integration", "defaultValue": false },
+
+    { "key": "enableAdminUI", "type": "boolean", "label": "Admin UI (9443)", "defaultValue": true },
+    { "key": "enableSSH", "type": "boolean", "label": "SSH Access", "defaultValue": false },
+    { "key": "sshPort", "type": "number", "label": "SSH Port", "defaultValue": 22, "validation": { "min": 1, "max": 65535 }, "showWhen": { "key": "enableSSH", "value": true } },
+
+    { "key": "includeFooterInChart", "type": "boolean", "label": "Include Footer Notes in Chart", "defaultValue": false }
+  ]
+}
+---
+graph TD
+    %% ═══════════════════════════════════════
+    %%  EXTERNAL ZONE
+    %% ═══════════════════════════════════════
+    subgraph EXT[External Network]
+        INTERNET[🌐 Internet / Wi-Fi Devices]
+        {{#if (or enableAdminUI enableSSH)}}
+        ADMIN[👤 Admin Client]
+        {{/if}}
+    end
+
+    %% ═══════════════════════════════════════
+    %%  FRONT-END FIREWALL
+    %% ═══════════════════════════════════════
+    {{#if showFirewalls}}
+    FFW{🛡️ Front-End Firewall}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  DMZ ZONE — UAG APPLIANCE
+    %% ═══════════════════════════════════════
+    subgraph DMZ[DMZ]
+        UAG[<b>Omnissa UAG 2603</b><br/>{{uagName}} — {{uagIP}}<br/>{{#if (eq deploymentSize "custom")}}{{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk{{/if}}{{#if (eq deploymentSize "standard")}}2 vCPU, 4 GB RAM, 20 GB Disk{{/if}}{{#if (eq deploymentSize "large")}}4 vCPU, 16 GB RAM, 20 GB Disk{{/if}}{{#if (eq deploymentSize "extra-large")}}8 vCPU, 32 GB RAM, 20 GB Disk{{/if}}<br/>TLS 1.2 + 1.3{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
+        {{#if enableSEG}}
+        {{#if segCluster}}
+        UAG2[🔁 SEG Peer Appliance]
+        UAG -->|5701 TCP<br/>Hazelcast Cache| UAG2
+        UAG -->|41232 TLS<br/>Vertx Cluster| UAG2
+        {{/if}}
+        {{/if}}
+    end
+
+    %% ═══════════════════════════════════════
+    %%  BACK-END FIREWALL
+    %% ═══════════════════════════════════════
+    {{#if showFirewalls}}
+    BFW{🛡️ Back-End Firewall}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  INTERNAL ZONE
+    %% ═══════════════════════════════════════
+    subgraph INT[Internal Network]
+        DNS[🔍 DNS Server]
+        {{#if enableHorizon}}
+        HCS[🖥️ Horizon Connection Server]
+        DESKTOPS[💻 Desktops / RDS Hosts]
+        {{/if}}
+        {{#if enableWebReverseProxy}}
+        INTRANET[🌐 Intranet Site]
+        {{/if}}
+        {{#if (or wrpIdentityBridging segKerberosKCD)}}
+        KDC[🔑 KDC / AD Server]
+        {{/if}}
+        {{#if enableTunnel}}
+        AWCM[☁️ Workspace ONE AWCM]
+        INTRESOURCES[🔧 Internal Resources / Web Apps]
+        {{#if (eq tunnelTopology "cascade")}}
+        TUNNEL_BE[🚇 Tunnel Back-End]
+        {{/if}}
+        {{#if (eq tunnelTopology "frontend-backend")}}
+        TUNNEL_BE[🚇 Tunnel Back-End]
+        {{/if}}
+        {{#if tunnelSyslogEnabled}}
+        SYSLOG[📝 Syslog Server]
+        {{/if}}
+        {{/if}}
+        {{#if (or enableTunnel (or enableSEG enableContentGateway))}}
+        UEMAPI[⚙️ Workspace ONE UEM REST API]
+        {{/if}}
+        {{#if (or enableSEG enableContentGateway)}}
+        UEMCONSOLE[⚙️ Workspace ONE UEM Console]
+        {{/if}}
+        {{#if enableSEG}}
+        EMAILSERVER[📧 Email Server]
+        {{#if segENS}}
+        ENS[✉️ Email Notification Service]
+        {{/if}}
+        {{/if}}
+        {{#if enableContentGateway}}
+        UEMDS[⚙️ Workspace ONE UEM Device Services]
+        REPO[📁 Content Repositories<br/>SharePoint / WebDAV / CMIS]
+        {{#if cgFileShares}}
+        FILESHARES[📂 SMB / CIFS File Shares]
+        {{/if}}
+        {{/if}}
+    end
+
+    %% ═══════════════════════════════════════
+    %%  EXTERNAL CLOUD INTEGRATIONS
+    %% ═══════════════════════════════════════
+    {{#if enableIntelligence}}
+    INTEL[📊 Workspace ONE Intelligence Cloud]
+    {{/if}}
+    {{#if enableOPSWAT}}
+    OPSWATSVC[🛡️ OPSWAT Cloud]
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FIREWALL BOUNDARY ANCHORS
+    %% ═══════════════════════════════════════
+    {{#if showFirewalls}}
+    INTERNET ~~~ FFW
+    FFW ~~~ UAG
+    UAG ~~~ BFW
+    BFW ~~~ DNS
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  INBOUND — Internet → UAG (through Front-End FW)
+    %% ═══════════════════════════════════════
+    {{#if enableHorizon}}
+    INTERNET -->|443 TCP+UDP<br/>Horizon XML-API / Blast| UAG
+    {{#if horizonBlastTCP8443}}
+    INTERNET -->|8443 TCP<br/>Blast Extreme| UAG
+    {{/if}}
+    {{#if horizonBlastUDP8443}}
+    INTERNET -->|8443 UDP<br/>Blast Extreme| UAG
+    {{/if}}
+    {{#if horizonPCoIP}}
+    INTERNET -->|4172 TCP+UDP<br/>PCoIP| UAG
+    {{/if}}
+    {{/if}}
+    {{#if enableWebReverseProxy}}
+    INTERNET -->|443 TCP<br/>Web Reverse Proxy| UAG
+    {{/if}}
+    {{#if enableTunnel}}
+    INTERNET -->|443 TCP<br/>Per-App Tunnel — internal 8443| UAG
+    {{/if}}
+    {{#if enableSEG}}
+    INTERNET -->|{{segListenerPort}} HTTPS<br/>Secure Email Gateway — internal 11443| UAG
+    {{/if}}
+    {{#if enableContentGateway}}
+    INTERNET -->|{{cgEndpointPort}} HTTPS<br/>Content Gateway {{#if (eq cgConfigType "relay")}}Relay ({{cgRelayPort}}){{else}}Basic{{/if}} — internal 10443| UAG
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  MANAGEMENT — Admin Client → UAG
+    %% ═══════════════════════════════════════
+    {{#if enableAdminUI}}
+    ADMIN -->|9443 TCP<br/>Admin UI| UAG
+    {{/if}}
+    {{#if enableSSH}}
+    ADMIN -->|{{sshPort}} TCP<br/>SSH| UAG
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  UNIVERSAL — UAG → DNS
+    %% ═══════════════════════════════════════
+    UAG -->|53 UDP<br/>DNS| DNS
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Horizon
+    %% ═══════════════════════════════════════
+    {{#if enableHorizon}}
+    UAG -->|443 TCP<br/>Horizon XML-API / Blast Web| HCS
+    UAG -->|22443 TCP+UDP<br/>Blast Extreme| DESKTOPS
+    {{#if horizonPCoIP}}
+    UAG -->|4172 TCP+UDP<br/>PCoIP| DESKTOPS
+    {{/if}}
+    {{#if horizonRDP}}
+    UAG -->|3389 TCP<br/>RDP| DESKTOPS
+    {{/if}}
+    {{#if horizonUSBRedirection}}
+    UAG -->|32111 TCP<br/>USB Redirection| DESKTOPS
+    {{/if}}
+    {{#if horizonMMR}}
+    UAG -->|9427 TCP<br/>MMR / CDR / HTML5| DESKTOPS
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Web Reverse Proxy
+    %% ═══════════════════════════════════════
+    {{#if enableWebReverseProxy}}
+    UAG -->|{{wrpIntranetPort}} TCP<br/>Web Reverse Proxy| INTRANET
+    {{#if wrpIdentityBridging}}
+    UAG -->|88 TCP+UDP<br/>Identity Bridging KCD| KDC
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND — Per-App Tunnel
+    %% ═══════════════════════════════════════
+    {{#if enableTunnel}}
+    UAG -->|{{#if (eq tunnelEnv "saas")}}443{{else}}2001{{/if}} HTTPS<br/>AWCM| AWCM
+    UAG -->|{{#if (eq tunnelEnv "saas")}}443{{else}}80 / 443{{/if}} HTTPS<br/>UEM REST API| UEMAPI
+    UAG -->|80, 443, Any TCP<br/>Internal Resources| INTRESOURCES
+    {{#if (eq tunnelTopology "cascade")}}
+    UAG -->|{{tunnelInternalCascadePort}} TLS 1.2<br/>Tunnel FE → BE| TUNNEL_BE
+    TUNNEL_BE -->|{{#if (eq tunnelEnv "saas")}}443{{else}}2001{{/if}} TLS 1.2<br/>AWCM| AWCM
+    TUNNEL_BE -->|80, 443, Any TCP<br/>Internal Resources| INTRESOURCES
+    {{/if}}
+    {{#if (eq tunnelTopology "frontend-backend")}}
+    UAG -->|{{tunnelInternalFEBEPort}} HTTPS<br/>Tunnel FE → BE| TUNNEL_BE
+    TUNNEL_BE -->|80, 443, Any TCP<br/>Internal Resources| INTRESOURCES
+    TUNNEL_BE -->|80 / 443 HTTPS<br/>UEM REST API| UEMAPI
+    {{/if}}
+    {{#if tunnelSyslogEnabled}}
+    UAG -.->|514 UDP<br/>Syslog| SYSLOG
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  SECURE EMAIL GATEWAY
+    %% ═══════════════════════════════════════
+    {{#if enableSEG}}
+    UAG -->|Any HTTPS<br/>SEG → Email Server| EMAILSERVER
+    UAG -->|Any HTTPS<br/>SEG → UEM API| UEMAPI
+    UEMCONSOLE -->|{{segListenerPort}} HTTPS<br/>Console → SEG| UAG
+    {{#if segENS}}
+    ENS -->|{{segListenerPort}} HTTPS<br/>ENS → SEG| UAG
+    {{/if}}
+    {{#if segKerberosKCD}}
+    UAG -->|88 TCP<br/>SEG Kerberos KCD| KDC
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  CONTENT GATEWAY
+    %% ═══════════════════════════════════════
+    {{#if enableContentGateway}}
+    UAG -->|Any HTTPS<br/>CG → UEM API| UEMAPI
+    UAG -->|Custom port HTTP/HTTPS<br/>CG → Repositories| REPO
+    UEMDS -->|{{cgEndpointPort}} HTTPS<br/>Device Services → CG| UAG
+    UEMCONSOLE -->|{{cgEndpointPort}} HTTPS<br/>Console → CG| UAG
+    {{#if (eq cgConfigType "relay")}}
+    INTERNET -->|{{cgRelayPort}} HTTPS<br/>Devices → CG Relay| UAG
+    {{/if}}
+    {{#if cgFileShares}}
+    UAG -->|137-139, 445<br/>SMB / CIFS| FILESHARES
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  OUTBOUND CLOUD — Intelligence & OPSWAT
+    %% ═══════════════════════════════════════
+    {{#if enableIntelligence}}
+    UAG -->|443 HTTPS<br/>Workspace ONE Intelligence| INTEL
+    {{/if}}
+    {{#if enableOPSWAT}}
+    UAG -->|443 HTTPS<br/>OPSWAT Device Risk| OPSWATSVC
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FOOTER NOTES (in-diagram)
+    %% ═══════════════════════════════════════
+    {{#if includeFooterInChart}}
+    UAG ~~~ NOTES
+    NOTES[<b>DMZ Configuration Notes</b><br/>Sizing: {{#if (eq deploymentSize "custom")}}{{customVCPU}} vCPU — {{customRAM}} GB RAM — {{customDisk}} GB{{/if}}{{#if (eq deploymentSize "standard")}}2 vCPU — 4 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "large")}}4 vCPU — 16 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "extra-large")}}8 vCPU — 32 GB RAM — 20 GB{{/if}}<br/>Front-end FW controls Internet → DMZ<br/>Back-end FW controls DMZ → Internal<br/>DNS UDP 53 required for all services{{#if enableHorizon}}<br/>Horizon — UDP 443 internally forwarded to UDP 9443{{/if}}{{#if enableTunnel}}<br/>Per-App Tunnel — 443 → 8443 internal{{/if}}{{#if enableSEG}}<br/>SEG — {{segListenerPort}} → 11443 internal, 44444 for diagnostics{{/if}}{{#if enableContentGateway}}<br/>Content Gateway — {{cgEndpointPort}} → 10443 internal, custom ports must be &gt; 1024{{/if}}{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 1)}}<br/>TLS Port Sharing — unique DNS per service when sharing 443{{/if}}]
+    style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  STYLES
+    %% ═══════════════════════════════════════
+    style UAG fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:2px
+    style EXT fill:#eceff1,color:#000,stroke:#607d8b
+    style DMZ fill:#fff3e0,color:#000,stroke:#ef6c00,stroke-width:2px
+    style INT fill:#e8f5e9,color:#000,stroke:#2e7d32
+    {{#if showFirewalls}}
+    style FFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
+    style BFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
+    {{/if}}
+    {{#if enableIntelligence}}
+    style INTEL fill:#e8f5e9,color:#1b5e20,stroke:#2e7d32
+    {{/if}}
+    {{#if enableOPSWAT}}
+    style OPSWATSVC fill:#e8f5e9,color:#1b5e20,stroke:#2e7d32
+    {{/if}}
