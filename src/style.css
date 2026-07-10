@@ -27,6 +27,13 @@
   color: #e0e0e0;
 }
 
+.brand-icon {
+  height: 1em;
+  width: 1em;
+  vertical-align: -0.125em;
+  border-radius: 3px;
+}
+
 .nav-links {
   display: flex;
   gap: 0.25rem;
