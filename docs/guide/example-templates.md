@@ -22,11 +22,11 @@ A left-to-right CI/CD pipeline from developer commit through build, registry, an
 
 A request/response sequence between client, load balancer, appliance, and database. Parameters rename the client and appliance participants and toggle the load balancer and database steps.
 
-## Omnissa Access 24.12 Connector — Network Topology
+## Omnissa Access Connector 26.05 — Network Topology
 
 **File:** `src/templates/omnissa-access-connector-network.mmdx`
 
-An enterprise integration diagram for the Omnissa Access 24.12 Connector and the services it talks to. This is a good showcase of advanced template features: a `deploymentSize` select (small/medium/large/custom, with custom vCPU/RAM/disk number inputs gated by `showWhen`), a `dirSyncMethod` select (AD-LDAP/IWA/LDAP), and chained conditionals (Horizon and Citrix toggles only appear when the Virtual App service is enabled, and the Citrix StoreFront port only when Citrix is). Further toggles cover user auth, Kerberos auth with an optional load balancer, outbound proxy, RSA SecurID, syslog, and NTP.
+An enterprise integration diagram for the Omnissa Access Connector 26.05 and the services it talks to. This is a good showcase of advanced template features: a `deploymentSize` select (small/medium/large/custom, with custom vCPU/RAM/disk number inputs gated by `showWhen`), a `dirSyncMethod` select (AD-LDAP/IWA/LDAP), and chained conditionals (Horizon and Citrix toggles only appear when the Virtual App service is enabled, and the Citrix StoreFront port only when Citrix is). Further toggles cover user auth, Kerberos auth with an optional load balancer, outbound proxy, RSA SecurID, syslog, and NTP.
 
 ## Omnissa AirWatch Cloud Connector (as of March 2026) — Network Topology
 
@@ -38,7 +38,7 @@ Connectivity for the AirWatch Cloud Connector (ACC) in a Workspace ONE UEM envir
 
 **File:** `src/templates/omnissa-uag-v2603-dmz-network.mmdx`
 
-A Unified Access Gateway 2603 appliance in a DMZ, with front-end/back-end firewalls and per-edge-service port flows. The largest template in the set: each edge service is toggled independently — Horizon (with optional Blast TCP/UDP 8443, PCoIP, RDP, USB redirection, and MMR/CDR ports), Web Reverse Proxy (with identity bridging), Per-App Tunnel (basic, cascade, or front-end/back-end topologies against a SaaS or on-prem UEM), Secure Email Gateway, and Content Gateway (basic or relay) — plus Workspace ONE Intelligence, OPSWAT, Admin UI, and SSH. A `deploymentSize` select (standard/large/extra-large/custom) sets appliance sizing.
+A Unified Access Gateway 2603 appliance in a DMZ, with front-end/back-end firewalls and per-edge-service port flows. The largest template in the set: each edge service is toggled independently — Horizon (with optional Blast TCP/UDP 8443, PCoIP, RDP, USB redirection, and MMR/CDR ports), Web Reverse Proxy (with identity bridging), Per-App Tunnel (basic, cascade, or front-end/back-end topologies against a SaaS or on-prem UEM, with a shared-443 or dedicated-8443 external port select), Secure Email Gateway, and Content Gateway (basic or relay) — plus Workspace ONE Intelligence, OPSWAT, Admin UI, and SSH. A `deploymentSize` select (standard/large/extra-large/custom) sets appliance sizing.
 
 ## Omnissa Horizon 8 2603 — Connection Server
 
@@ -62,10 +62,10 @@ App Volumes Manager connectivity for Horizon 8 2603, with toggles for agent-to-m
 
 **File:** `src/templates/omnissa-horizon-v2603-enrollment-server.mmdx`
 
-The True SSO Enrollment Server and its connections to paired Connection Servers (configurable count), the certificate authority, and Active Directory. A select chooses the CA dynamic RPC range (modern vs legacy), and a toggle expands the AD domain controller port detail.
+The True SSO Enrollment Server and its connections to paired Connection Servers (configurable count), the certificate authority, and Active Directory. A select chooses the CA dynamic RPC range — both published ranges together (the default), or the modern or legacy range alone — and a toggle expands the AD domain controller port detail.
 
 ## Omnissa Horizon 8 2603 — Horizon Recording Server
 
 **File:** `src/templates/omnissa-horizon-v2603-recording-server.mmdx`
 
-The Horizon Recording Server with its database (PostgreSQL or MS SQL select), agent upload traffic, and admin web console — with toggles for AD LDAPS console login (636) and multi-server configuration import (9443).
+The Horizon Recording Server with its database (Microsoft SQL Server, PostgreSQL, or local SQLite select), shared NTFS recording storage (SMB 445), agent upload traffic, and admin web console — with toggles for AD LDAPS console login (636) and multi-server configuration import (9443).

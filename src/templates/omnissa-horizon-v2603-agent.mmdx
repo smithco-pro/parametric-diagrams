@@ -171,7 +171,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     AGENT ~~~ NOTES
-    NOTES[<b>Horizon Agent Notes</b><br/>As of June 2026<br/>Modes — {{#if modeInternal}}Internal {{/if}}{{#if modeExternal}}External {{/if}}{{#if modeTunneled}}Tunneled{{/if}}<br/>Protocols — {{#if protoBlast}}Blast 22443 {{/if}}{{#if protoPCoIP}}PCoIP 4172 {{/if}}{{#if protoRDP}}RDP 3389{{/if}}<br/>JMS — {{#if jmsEnhanced}}4001 + 4002 enhanced{{else}}4001 legacy{{/if}}{{#if sepCDR}}<br/>CDR / MMR separated — 9427{{/if}}{{#if sepUSB}}<br/>USB separated — 32111{{/if}}{{#if unmanagedRegistration}}<br/>Unmanaged registration — 389{{/if}}]
+    NOTES[<b>Horizon Agent Notes</b><br/>As of June 2026<br/>Modes — {{#if modeInternal}}Internal {{/if}}{{#if modeExternal}}External {{/if}}{{#if modeTunneled}}Tunneled{{/if}}<br/>Protocols — {{#if protoBlast}}Blast 22443 {{/if}}{{#if protoPCoIP}}PCoIP 4172 {{/if}}{{#if protoRDP}}RDP 3389{{/if}}{{#if (eq (countTrue protoBlast protoPCoIP protoRDP) 0)}}none — enable Blast, PCoIP, or RDP for a usable session{{/if}}<br/>JMS — {{#if jmsEnhanced}}4001 + 4002 enhanced{{else}}4001 legacy{{/if}}{{#if sepCDR}}<br/>CDR / MMR separated — 9427{{/if}}{{#if sepUSB}}<br/>USB separated — 32111{{/if}}{{#if (or protoPCoIP protoRDP)}}<br/>CDR / MMR + USB side-channel is Blast-only — PCoIP / RDP sessions use 9427 / 32111{{/if}}{{#if unmanagedRegistration}}<br/>Unmanaged registration — 389{{/if}}<br/>Framework channel 32111 — also used by Connection Server admin / DCT log collection]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 

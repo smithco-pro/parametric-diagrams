@@ -1,7 +1,7 @@
 ---
 {
   "name": "Omnissa Horizon 8 2603 — Connection Server",
-  "notes": "<h4>Connection Server — Control Plane Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>JMS:</b> Agents and replica Connection Servers communicate over JMS. With enhanced message security (the default), TCP 4002 is used in addition to 4001 for agent JMS, and both 4100 / 4101 are required between Connection Servers — open all four.</li><li><b>Replica install:</b> TCP 389 and 32111 (cluster master secret) are only required while installing/rekeying a replica Connection Server. Replicas also require TCP 135 (MS-RPC endpoint mapper) and the dynamic range 49152-65535 between all Connection Server instances for ongoing AD LDS replication.</li>{{#if enableCPA}}<li><b>Cloud Pod Architecture:</b> Global LDAP replication on 22389 (ADLDS), inter-pod VIPA on 8472, and MS-RPC on 135 plus the dynamic client range 49152-65535.</li>{{/if}}<li><b>Events database:</b> {{#if (eq eventsDb \"mssql\")}}Microsoft SQL on 1433 (default).{{/if}}{{#if (eq eventsDb \"oracle\")}}Oracle on 1521.{{/if}}{{#if (eq eventsDb \"postgres\")}}PostgreSQL on 5432.{{/if}}{{#if (eq eventsDb \"none\")}}No events database configured.{{/if}}</li>{{#if splitMgmtTraffic}}<li><b>Split management traffic:</b> Suggested port 9443 separates REST API / View API / Horizon Console from user traffic. Available in 8 2412 and later.</li>{{/if}}{{#if (or radiusAuth rsaSecurID)}}<li><b>Two-factor auth:</b> RADIUS / RSA SecurID default to UDP 5500 but the port is configurable.</li>{{/if}}{{#if monitorAppVolumes}}<li><b>App Volumes:</b> The Connection Server connects to App Volumes Managers on 443 for monitoring and Apps on Demand calls.</li>{{/if}}{{#if enableHCC}}<li><b>Horizon Cloud Connector:</b> Reaches the Omnissa Cloud Service over 443 (cloud.horizon.omnissa.com) and integrates with the Connection Server over 443 (API) and 4002 (JMS).</li>{{/if}}<li>Display-protocol session traffic (Blast / PCoIP / RDP) is covered in the companion Horizon Agent diagram; the external client edge detail is covered in the UAG 2603 diagram.</li><li>References: <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Network Ports in Horizon 8 (Omnissa Tech Zone)</a> and <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">Omnissa Ports and Protocols</a>.</li></ul>",
+  "notes": "<h4>Connection Server — Control Plane Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>JMS:</b> Agents and replica Connection Servers communicate over JMS. With enhanced message security (the default), TCP 4002 is used in addition to 4001 for agent JMS, and both 4100 / 4101 are required between Connection Servers — open all four.</li><li><b>Replica install:</b> TCP 389 and 32111 (cluster master secret) are only required while installing/rekeying a replica Connection Server. Replicas also require TCP 135 (MS-RPC endpoint mapper) and the dynamic range 49152-65535 between all Connection Server instances for ongoing AD LDS replication.</li>{{#if enableCPA}}<li><b>Cloud Pod Architecture:</b> Global LDAP replication on 22389 and secure LDAPS global replication on 22636 (ADLDS), inter-pod VIPA on 8472, and MS-RPC on 135 plus the dynamic client range 49152-65535. Note: 22636 is listed in the <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Tech Zone Horizon 8 port guide</a> but not in <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">ports.omnissa.com</a> as of 2026-07-10; it is included here because omitting it from firewall rules can break secure LDAPS replication between pods.</li>{{/if}}<li><b>Events database:</b> {{#if (eq eventsDb \"mssql\")}}Microsoft SQL on 1433 (default).{{/if}}{{#if (eq eventsDb \"oracle\")}}Oracle on 1521.{{/if}}{{#if (eq eventsDb \"postgres\")}}PostgreSQL on 5432.{{/if}}{{#if (eq eventsDb \"none\")}}No events database configured.{{/if}}</li>{{#if splitMgmtTraffic}}<li><b>Split management traffic:</b> Suggested port 9443 separates REST API / View API / Horizon Console from user traffic. Available in 8 2412 and later.</li>{{/if}}{{#if (or radiusAuth rsaSecurID)}}<li><b>Two-factor auth:</b> RADIUS / RSA SecurID default to UDP 5500 but the port is configurable.</li>{{/if}}{{#if monitorAppVolumes}}<li><b>App Volumes:</b> The Connection Server connects to App Volumes Managers on 443 for monitoring and Apps on Demand calls.</li>{{/if}}{{#if enableHCC}}<li><b>Horizon Cloud Connector:</b> Reaches the Omnissa Cloud Service over 443 (cloud.horizon.omnissa.com) and integrates with the Connection Server over 443 (API) and 4002 (JMS).</li>{{/if}}<li>Display-protocol session traffic (Blast / PCoIP / RDP) is covered in the companion Horizon Agent diagram; the external client edge detail is covered in the UAG 2603 diagram.</li><li>References: <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Network Ports in Horizon 8 (Omnissa Tech Zone)</a> and <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">Omnissa Ports and Protocols</a>.</li></ul>",
   "parameters": [
     { "key": "csName", "type": "string", "label": "Connection Server Hostname", "defaultValue": "cs1.example.com" },
     { "key": "csIP", "type": "string", "label": "Connection Server IP", "defaultValue": "10.10.10.10" },
@@ -81,9 +81,6 @@ graph TD
         {{#if enableReplica}}
         CS_REPLICA[🔁 Replica Connection Server<br/>× {{replicaCount}}]
         {{/if}}
-        {{#if enableCPA}}
-        CS_CPA[🌐 CPA Peer Pod<br/>Connection Server]
-        {{/if}}
         {{#if enableVCenter}}
         VCENTER[(🗄️ vCenter Server)]
         {{#if showEsxi}}
@@ -106,6 +103,15 @@ graph TD
         AVMGR[📦 App Volumes Manager]
         {{/if}}
     end
+
+    %% ═══════════════════════════════════════
+    %%  CPA PEER POD — REMOTE SITE
+    %% ═══════════════════════════════════════
+    {{#if enableCPA}}
+    subgraph CPAPEER[Peer Pod — Remote Site]
+        CS_CPA[🌐 CPA Peer Pod<br/>Connection Server]
+    end
+    {{/if}}
 
     %% ═══════════════════════════════════════
     %%  CLOUD INTEGRATIONS
@@ -171,7 +177,7 @@ graph TD
     %%  CLOUD POD ARCHITECTURE
     %% ═══════════════════════════════════════
     {{#if enableCPA}}
-    CS -->|22389 TCP — Global LDAP / ADLDS<br/>8472 TCP — Inter-pod VIPA<br/>135, 49152-65535 TCP — MS-RPC| CS_CPA
+    CS -->|22389 TCP — Global LDAP / ADLDS<br/>22636 TCP — Global LDAPS / ADLDS secure replication<br/>8472 TCP — Inter-pod VIPA<br/>135, 49152-65535 TCP — MS-RPC| CS_CPA
     {{/if}}
 
     %% ═══════════════════════════════════════
@@ -232,7 +238,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     CS ~~~ NOTES
-    NOTES[<b>Connection Server Notes</b><br/>As of June 2026<br/>JMS enhanced security default — 4002 / 4101 in addition to 4001 / 4100<br/>Replica install only — 389, 32111<br/>Replica MS-RPC AD LDS — 135, 49152-65535<br/>{{#if enableCPA}}CPA — 22389, 8472, 135, 49152-65535<br/>{{/if}}Events DB — {{#if (eq eventsDb "mssql")}}MS SQL 1433{{/if}}{{#if (eq eventsDb "oracle")}}Oracle 1521{{/if}}{{#if (eq eventsDb "postgres")}}PostgreSQL 5432{{/if}}{{#if (eq eventsDb "none")}}none{{/if}}{{#if splitMgmtTraffic}}<br/>Split-mgmt 9443 — 8 2412+{{/if}}{{#if (or radiusAuth rsaSecurID)}}<br/>2FA 5500 UDP — configurable{{/if}}{{#if enableHCC}}<br/>HCC → Omnissa Cloud 443<br/>HCC → CS 443 API / 4002 JMS{{/if}}]
+    NOTES[<b>Connection Server Notes</b><br/>As of June 2026<br/>JMS enhanced security default — 4002 / 4101 in addition to 4001 / 4100<br/>Replica install only — 389, 32111<br/>Replica MS-RPC AD LDS — 135, 49152-65535<br/>{{#if enableCPA}}CPA — 22389, 22636, 8472, 135, 49152-65535<br/>CPA 22636 — per Tech Zone port guide, not in ports.omnissa.com as of 2026-07-10<br/>{{/if}}Events DB — {{#if (eq eventsDb "mssql")}}MS SQL 1433{{/if}}{{#if (eq eventsDb "oracle")}}Oracle 1521{{/if}}{{#if (eq eventsDb "postgres")}}PostgreSQL 5432{{/if}}{{#if (eq eventsDb "none")}}none{{/if}}{{#if splitMgmtTraffic}}<br/>Split-mgmt 9443 — 8 2412+{{/if}}{{#if (or radiusAuth rsaSecurID)}}<br/>2FA 5500 UDP — configurable{{/if}}{{#if enableHCC}}<br/>HCC → Omnissa Cloud 443<br/>HCC → CS 443 API / 4002 JMS{{/if}}]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 
@@ -243,6 +249,9 @@ graph TD
     style EXT fill:#eceff1,color:#000,stroke:#607d8b
     style DMZ fill:#fff3e0,color:#000,stroke:#ef6c00,stroke-width:2px
     style INT fill:#e8f5e9,color:#000,stroke:#2e7d32
+    {{#if enableCPA}}
+    style CPAPEER fill:#f3e5f5,color:#000,stroke:#7b1fa2
+    {{/if}}
     {{#if showFirewalls}}
     style FFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
     style BFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
