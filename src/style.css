@@ -376,3 +376,25 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   font-family: 'Fira Code', monospace;
   font-size: 0.8rem;
 }
+
+/* Responsive: stack editor and preview panels on narrow screens so the
+   diagram stays visible and usable on phones/tablets */
+@media (max-width: 900px) {
+  #app {
+    padding: 0.75rem;
+  }
+
+  .layout {
+    flex-direction: column;
+  }
+
+  .editor-panel,
+  .preview-panel {
+    flex: none;
+    width: 100%;
+  }
+
+  .preview-panel {
+    min-height: 60vh;
+  }
+}

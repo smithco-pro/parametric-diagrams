@@ -1,7 +1,7 @@
 ---
 {
   "name": "Omnissa Horizon 8 2603 — App Volumes Manager & DEM",
-  "notes": "<h4>App Volumes Manager &amp; Dynamic Environment Manager Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>App Volumes Agent → Manager:</b> PowerShell web services on TCP 5985, plus {{#if avSSL}}TCP 443 (SSL){{else}}TCP 80 (no SSL certificate){{/if}} for the agent-to-manager channel.</li><li><b>App Volumes Manager → infrastructure:</b> vCenter Server SOAP on 443, ESXi hostd on 443, and the App Volumes database (Microsoft SQL) on 1433.</li>{{#if enableDEM}}<li><b>Dynamic Environment Manager:</b> The DEM FlexEngine on the desktop / RDS host accesses SMB file shares on TCP 445.</li>{{/if}}<li>These services run on the same virtual desktop / RDS hosts as the Horizon Agent; see the Horizon Agent diagram for session traffic.</li><li>Reference: Omnissa Horizon 8 2603 — Network Ports for App Volumes and Dynamic Environment Manager.</li></ul>",
+  "notes": "<h4>App Volumes Manager &amp; Dynamic Environment Manager Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>App Volumes Agent → Manager:</b> {{#if avSSL}}TCP 443 (SSL){{else}}TCP 80 (no SSL certificate){{/if}} for the agent-to-manager channel.</li><li><b>App Volumes Manager → infrastructure:</b> vCenter Server SOAP on 443, ESXi hostd on 443, and the App Volumes database (Microsoft SQL) on 1433.</li>{{#if enableDEM}}<li><b>Dynamic Environment Manager:</b> The DEM FlexEngine on the desktop / RDS host accesses SMB file shares on TCP 445.</li>{{/if}}<li>These services run on the same virtual desktop / RDS hosts as the Horizon Agent; see the Horizon Agent diagram for session traffic.</li><li>Reference: Omnissa Horizon 8 2603 — Network Ports for App Volumes and Dynamic Environment Manager.</li></ul>",
   "parameters": [
     { "key": "avName", "type": "string", "label": "App Volumes Manager Hostname", "defaultValue": "av1.example.com" },
     { "key": "avIP", "type": "string", "label": "App Volumes Manager IP", "defaultValue": "10.10.10.40" },
@@ -54,7 +54,6 @@ graph TD
     %% ═══════════════════════════════════════
     %%  AGENT → MANAGER
     %% ═══════════════════════════════════════
-    AVAGENT -->|5985 TCP<br/>PowerShell web services| AVMGR
     AVAGENT -->|{{#if avSSL}}443 TCP{{else}}80 TCP{{/if}}<br/>Agent → Manager| AVMGR
 
     %% ═══════════════════════════════════════
@@ -78,7 +77,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     AVMGR ~~~ NOTES
-    NOTES[<b>App Volumes & DEM Notes</b><br/>As of June 2026<br/>Agent → Manager — 5985 + {{#if avSSL}}443{{else}}80{{/if}}<br/>Manager → vCenter / ESXi — 443<br/>Manager → SQL — 1433{{#if enableDEM}}<br/>DEM FlexEngine → SMB — 445{{/if}}]
+    NOTES[<b>App Volumes & DEM Notes</b><br/>As of June 2026<br/>Agent → Manager — {{#if avSSL}}443{{else}}80{{/if}}<br/>Manager → vCenter / ESXi — 443<br/>Manager → SQL — 1433{{#if enableDEM}}<br/>DEM FlexEngine → SMB — 445{{/if}}]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 

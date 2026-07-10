@@ -1,7 +1,7 @@
 ---
 {
-  "name": "Omnissa Horizon 8 2603 — Session Recording Server",
-  "notes": "<h4>Session Recording Server Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Availability:</b> Horizon session recording was introduced in the 8 2111 / 8 2203 timeframe and is included in 8 2603.</li><li><b>Recording data (9443):</b> The Recording Agent on the desktop / RDS host transmits application data to the Recording Server over TLS on TCP 9443. The web console and recording-server-to-recording-server configuration import also use 9443.</li><li><b>Database:</b> {{#if (eq recordingDb \"postgres\")}}PostgreSQL on 5432 (default).{{else}}Microsoft SQL on 1433 (default).{{/if}}</li><li><b>Source note:</b> The published port table lists the Microsoft SQL port as 1443, but its own service description states the default is 1433; this diagram uses 1433.</li>{{#if ldapsAuth}}<li><b>Web console login:</b> LDAPS (TCP 636) is used when Active Directory is integrated for web console authentication.</li>{{/if}}<li>Reference: Omnissa Horizon 8 2603 — Network Ports for Horizon Recording Server.</li></ul>",
+  "name": "Omnissa Horizon 8 2603 — Horizon Recording Server",
+  "notes": "<h4>Horizon Recording Server Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Availability:</b> Horizon Recording has been available since Horizon 8 2106 (VDI recording; RDSH recording from 2111, Linux agent from 2306) and is included in 8 2603.</li><li><b>Recording data (9443):</b> The Recording Agent on the desktop / RDS host transmits application data to the Recording Server over TLS on TCP 9443. The web console and recording-server-to-recording-server configuration import also use 9443.</li><li><b>Database:</b> {{#if (eq recordingDb \"postgres\")}}PostgreSQL on 5432 (default).{{else}}Microsoft SQL on 1433 (default).{{/if}}</li><li><b>Source note:</b> The published port table lists the Microsoft SQL port as 1443, but its own service description states the default is 1433; this diagram uses 1433.</li>{{#if ldapsAuth}}<li><b>Web console login:</b> LDAPS (TCP 636) is used when Active Directory is integrated for web console authentication.</li>{{/if}}<li>Reference: Omnissa Horizon 8 2603 — Network Ports for Horizon Recording Server.</li></ul>",
   "parameters": [
     { "key": "rsName", "type": "string", "label": "Recording Server Hostname", "defaultValue": "rs1.example.com" },
     { "key": "rsIP", "type": "string", "label": "Recording Server IP", "defaultValue": "10.10.10.30" },
@@ -77,7 +77,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     RS ~~~ NOTES
-    NOTES[<b>Recording Server Notes</b><br/>As of June 2026<br/>Recording Agent → Server — 9443 TLS<br/>Web console — 9443<br/>Database — {{#if (eq recordingDb "postgres")}}PostgreSQL 5432{{else}}Microsoft SQL 1433{{/if}}{{#if ldapsAuth}}<br/>Web console login — LDAPS 636{{/if}}{{#if multiServer}}<br/>Config import — 9443 peer{{/if}}]
+    NOTES[<b>Horizon Recording Server Notes</b><br/>As of June 2026<br/>Recording Agent → Server — 9443 TLS<br/>Web console — 9443<br/>Database — {{#if (eq recordingDb "postgres")}}PostgreSQL 5432{{else}}Microsoft SQL 1433{{/if}}{{#if ldapsAuth}}<br/>Web console login — LDAPS 636{{/if}}{{#if multiServer}}<br/>Config import — 9443 peer{{/if}}]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 

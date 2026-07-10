@@ -32,7 +32,10 @@ export function getSvgContent(container: HTMLElement): string | null {
   return new XMLSerializer().serializeToString(svg);
 }
 
-export async function exportAsPng(container: HTMLElement): Promise<void> {
+export async function exportAsPng(
+  container: HTMLElement,
+  baseName = "diagram"
+): Promise<void> {
   const svg = container.querySelector("svg");
   if (!svg) return;
 
@@ -82,7 +85,7 @@ export async function exportAsPng(container: HTMLElement): Promise<void> {
       if (!blob) return;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "appliance-diagram.png";
+      a.download = `${baseName}.png`;
       a.click();
       URL.revokeObjectURL(a.href);
     }, "image/png");

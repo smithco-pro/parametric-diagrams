@@ -53,6 +53,48 @@ export function compileTemplate(
   return compiled;
 }
 
+// Characters that break Mermaid label parsing when spliced into node/edge
+// labels: "|" is the edge-label delimiter, "(" ")" "[" "]" "{" "}" are
+// node-shape syntax, and '"' terminates quoted labels. Mermaid supports
+// numeric entity codes (e.g. #124;) inside labels and renders them as the
+// literal character, so the diagram still displays what the user typed.
+const MERMAID_LABEL_ESCAPES: Record<string, string> = {
+  "|": "#124;",
+  "(": "#40;",
+  ")": "#41;",
+  "[": "#91;",
+  "]": "#93;",
+  "{": "#123;",
+  "}": "#125;",
+  '"': "#34;",
+};
+
+export function sanitizeMermaidLabelValue(value: string): string {
+  return value.replace(/[|()[\]{}"]/g, (ch) => MERMAID_LABEL_ESCAPES[ch]);
+}
+
+/**
+ * Returns a copy of the parameter context safe to splice into the Mermaid
+ * diagram body: string-typed parameter values (user-typed hostnames, IPs,
+ * comments) have Mermaid-breaking characters replaced with numeric entity
+ * codes. Use only for the diagram body — the frontmatter notes template
+ * renders HTML and must receive the raw values.
+ */
+export function sanitizeMermaidContext(
+  context: Record<string, unknown>,
+  parameters: MmdxMeta["parameters"]
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = { ...context };
+  for (const param of parameters) {
+    if (param.type !== "string") continue;
+    const value = sanitized[param.key];
+    if (typeof value === "string") {
+      sanitized[param.key] = sanitizeMermaidLabelValue(value);
+    }
+  }
+  return sanitized;
+}
+
 export function executeTemplate(
   compiled: HandlebarsTemplateDelegate,
   context: Record<string, unknown>

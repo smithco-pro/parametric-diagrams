@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js v18+
+- Node.js 20.19+, 22.12+, or 24+ (required by Vite 7 and Vitest 4); Node 22 LTS recommended (matches the `flake.nix` dev shell)
 
 ## Installation
 
@@ -15,7 +15,7 @@ npm install
 ## Development
 
 ```bash
-# Start the dev server (default: http://localhost:5173)
+# Start the app (http://localhost:5173/parametric-diagrams/) and docs (http://localhost:5175/parametric-diagrams/docs/) dev servers
 npm run dev
 
 # Type-check and build for production
@@ -78,7 +78,7 @@ The application state is synchronized with the URL query string. As you select t
 | URL | Effect |
 |-----|--------|
 | `?template=network` | Load the network template with default parameters |
-| `?template=network&showFirewall=true&serverCount=5` | Load network template with specific parameter values |
+| `?template=network&appNode3=false&enableCache=false` | Load network template with App Node 3 and the cache layer hidden |
 | `?template=deployment` | Load the deployment template with defaults |
 
 Opening a shared URL will automatically select the template and apply the parameter values. Any parameters not specified in the URL will use their defaults.

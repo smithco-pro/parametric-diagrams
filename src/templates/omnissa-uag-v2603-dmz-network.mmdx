@@ -1,7 +1,7 @@
 ---
 {
   "name": "Omnissa UAG 2603 — DMZ Network Topology",
-  "notes": "<h4>DMZ Deployment Notes</h4><ul><li><b>Appliance Sizing:</b> {{#if (eq deploymentSize \"custom\")}}{{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk{{/if}}{{#if (eq deploymentSize \"standard\")}}2 vCPU, 4 GB RAM, 20 GB Disk (standard Horizon / reverse-proxy footprint){{/if}}{{#if (eq deploymentSize \"large\")}}4 vCPU, 16 GB RAM, 20 GB Disk (mixed Edge Services or larger SEG/Tunnel workloads){{/if}}{{#if (eq deploymentSize \"extra-large\")}}8 vCPU, 32 GB RAM, 20 GB Disk (high-throughput SEG or many concurrent Edge Services){{/if}}</li>{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 2)}}<li><b>Multiple Edge Services detected</b> — consider sizing up one tier and verifying TLS Port Sharing requirements (unique DNS per service when sharing 443).</li>{{/if}}<li><b>Two-firewall sandwich:</b> Front-end firewall permits only required Internet→DMZ ports; back-end firewall permits only traffic originating from the UAG in the DMZ.</li><li><b>DNS (53 UDP):</b> Required by all UAG services — ensure the front-end firewall does not block UDP 53 requests/replies.</li>{{#if enableHorizon}}<li><b>Horizon:</b> Port 443 UDP is internally forwarded to UDP 9443 on the UAG UDP Tunnel Server. If Blast uses TCP 443, opening 8443 externally is not required.</li>{{/if}}{{#if enableTunnel}}<li><b>Per-App Tunnel:</b> When Internet-facing port 443 is used, Per-App Tunnel listens on 8443 internally. AWCM/REST API port: {{#if (eq tunnelEnv \"saas\")}}SaaS 443{{else}}On-Prem 2001 (AWCM), 80/443 (REST API){{/if}}.</li>{{/if}}{{#if enableSEG}}<li><b>Secure Email Gateway:</b> UAG routes inbound {{segListenerPort}}/HTTPS internally to 11443. Port 44444 is used by SEG for diagnostics/admin on the appliance itself.</li>{{/if}}{{#if enableContentGateway}}<li><b>Content Gateway:</b> UAG routes inbound {{cgEndpointPort}}/HTTPS internally to 10443. CG runs as non-root — custom ports must be &gt; 1024.</li>{{/if}}<li>Reference: Omnissa Unified Access Gateway 2603 Product Documentation — Firewall rules for DMZ-based Unified Access Gateway appliances.</li></ul>",
+  "notes": "<h4>DMZ Deployment Notes</h4><ul><li><b>Appliance Sizing:</b> {{#if (eq deploymentSize \"custom\")}}{{customVCPU}} vCPU, {{customRAM}} GB RAM, {{customDisk}} GB Disk{{/if}}{{#if (eq deploymentSize \"standard\")}}2 vCPU, 4 GB RAM, 20 GB Disk (standard Horizon / reverse-proxy footprint){{/if}}{{#if (eq deploymentSize \"large\")}}4 vCPU, 16 GB RAM, 20 GB Disk (mixed Edge Services or larger SEG/Tunnel workloads){{/if}}{{#if (eq deploymentSize \"extra-large\")}}8 vCPU, 32 GB RAM, 20 GB Disk (high-throughput SEG or many concurrent Edge Services){{/if}}</li>{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 1)}}<li><b>Multiple Edge Services detected</b> — consider sizing up one tier and verifying TLS Port Sharing requirements (unique DNS per service when sharing 443).</li>{{/if}}<li><b>Two-firewall sandwich:</b> Front-end firewall permits only required Internet→DMZ ports; back-end firewall permits only the specific DMZ ↔ Internal flows required by enabled edge services — mostly UAG-originated, plus inbound-to-UAG traffic from UEM Console / Device Services / ENS when SEG or Content Gateway is enabled.</li><li><b>DNS (53 UDP):</b> Required by all UAG services — ensure the front-end firewall does not block UDP 53 requests/replies.</li>{{#if enableHorizon}}<li><b>Horizon:</b> Port 443 UDP is internally forwarded to UDP 9443 on the UAG UDP Tunnel Server. If Blast uses TCP 443, opening 8443 externally is not required.</li>{{/if}}{{#if enableTunnel}}<li><b>Per-App Tunnel:</b> When Internet-facing port 443 is used, Per-App Tunnel listens on 8443 internally. AWCM/REST API port: {{#if (eq tunnelEnv \"saas\")}}SaaS 443{{else}}On-Prem 2001 (AWCM), 80/443 (REST API){{/if}}.</li>{{/if}}{{#if enableSEG}}<li><b>Secure Email Gateway:</b> UAG routes inbound {{segListenerPort}}/HTTPS internally to 11443. Port 44444 is used by SEG for diagnostics/admin on the appliance itself.</li>{{/if}}{{#if enableContentGateway}}<li><b>Content Gateway:</b> {{#if (eq cgConfigType \"relay\")}}Relay configuration — devices connect to the UAG Relay on {{cgRelayPort}}/HTTPS (internally 10443); the Relay forwards to the internal CG Endpoint on {{cgEndpointPort}}/HTTPS (endpoint listens internally on 10443).{{else}}UAG routes inbound {{cgEndpointPort}}/HTTPS internally to 10443.{{/if}} CG runs as non-root — custom ports must be &gt; 1024.</li>{{/if}}<li>Reference: Omnissa Unified Access Gateway 2603 Product Documentation — Firewall rules for DMZ-based Unified Access Gateway appliances.</li></ul>",
   "parameters": [
     { "key": "uagName", "type": "string", "label": "UAG Hostname", "defaultValue": "uag.example.com" },
     { "key": "uagIP", "type": "string", "label": "UAG DMZ IP", "defaultValue": "10.20.30.10" },
@@ -75,9 +75,6 @@ graph TD
     %% ═══════════════════════════════════════
     subgraph EXT[External Network]
         INTERNET[🌐 Internet / Wi-Fi Devices]
-        {{#if (or enableAdminUI enableSSH)}}
-        ADMIN[👤 Admin Client]
-        {{/if}}
     end
 
     %% ═══════════════════════════════════════
@@ -151,11 +148,23 @@ graph TD
         {{#if enableContentGateway}}
         UEMDS[⚙️ Workspace ONE UEM Device Services]
         REPO[📁 Content Repositories<br/>SharePoint / WebDAV / CMIS]
+        {{#if (eq cgConfigType "relay")}}
+        CG_ENDPOINT[🗄️ Content Gateway Endpoint]
+        {{/if}}
         {{#if cgFileShares}}
         FILESHARES[📂 SMB / CIFS File Shares]
         {{/if}}
         {{/if}}
     end
+
+    %% ═══════════════════════════════════════
+    %%  MANAGEMENT ZONE
+    %% ═══════════════════════════════════════
+    {{#if (or enableAdminUI enableSSH)}}
+    subgraph MGMT[Management Network]
+        ADMIN[👤 Admin Client]
+    end
+    {{/if}}
 
     %% ═══════════════════════════════════════
     %%  EXTERNAL CLOUD INTEGRATIONS
@@ -175,6 +184,9 @@ graph TD
     FFW ~~~ UAG
     UAG ~~~ BFW
     BFW ~~~ DNS
+    {{#if (or enableAdminUI enableSSH)}}
+    BFW ~~~ ADMIN
+    {{/if}}
     {{/if}}
 
     %% ═══════════════════════════════════════
@@ -202,7 +214,11 @@ graph TD
     INTERNET -->|{{segListenerPort}} HTTPS<br/>Secure Email Gateway — internal 11443| UAG
     {{/if}}
     {{#if enableContentGateway}}
-    INTERNET -->|{{cgEndpointPort}} HTTPS<br/>Content Gateway {{#if (eq cgConfigType "relay")}}Relay ({{cgRelayPort}}){{else}}Basic{{/if}} — internal 10443| UAG
+    {{#if (eq cgConfigType "relay")}}
+    INTERNET -->|{{cgRelayPort}} HTTPS<br/>Devices → CG Relay — internal 10443| UAG
+    {{else}}
+    INTERNET -->|{{cgEndpointPort}} HTTPS<br/>Content Gateway Basic — internal 10443| UAG
+    {{/if}}
     {{/if}}
 
     %% ═══════════════════════════════════════
@@ -291,15 +307,25 @@ graph TD
     %%  CONTENT GATEWAY
     %% ═══════════════════════════════════════
     {{#if enableContentGateway}}
+    {{#if (eq cgConfigType "relay")}}
+    UAG -->|{{cgEndpointPort}} HTTPS<br/>Relay → Endpoint — internal 10443| CG_ENDPOINT
+    UAG -->|Any HTTPS<br/>CG Relay → UEM API| UEMAPI
+    CG_ENDPOINT -->|Any HTTPS<br/>CG Endpoint → UEM API| UEMAPI
+    CG_ENDPOINT -->|Custom port HTTP/HTTPS<br/>CG → Repositories| REPO
+    UEMDS -->|{{cgRelayPort}} TCP<br/>Device Services → CG Relay| UAG
+    UEMCONSOLE -->|{{cgRelayPort}} HTTPS<br/>Console → CG Relay| UAG
+    {{else}}
     UAG -->|Any HTTPS<br/>CG → UEM API| UEMAPI
     UAG -->|Custom port HTTP/HTTPS<br/>CG → Repositories| REPO
     UEMDS -->|{{cgEndpointPort}} HTTPS<br/>Device Services → CG| UAG
     UEMCONSOLE -->|{{cgEndpointPort}} HTTPS<br/>Console → CG| UAG
-    {{#if (eq cgConfigType "relay")}}
-    INTERNET -->|{{cgRelayPort}} HTTPS<br/>Devices → CG Relay| UAG
     {{/if}}
     {{#if cgFileShares}}
+    {{#if (eq cgConfigType "relay")}}
+    CG_ENDPOINT -->|137-139, 445<br/>SMB / CIFS| FILESHARES
+    {{else}}
     UAG -->|137-139, 445<br/>SMB / CIFS| FILESHARES
+    {{/if}}
     {{/if}}
     {{/if}}
 
@@ -318,7 +344,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     UAG ~~~ NOTES
-    NOTES[<b>DMZ Configuration Notes</b><br/>Sizing: {{#if (eq deploymentSize "custom")}}{{customVCPU}} vCPU — {{customRAM}} GB RAM — {{customDisk}} GB{{/if}}{{#if (eq deploymentSize "standard")}}2 vCPU — 4 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "large")}}4 vCPU — 16 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "extra-large")}}8 vCPU — 32 GB RAM — 20 GB{{/if}}<br/>Front-end FW controls Internet → DMZ<br/>Back-end FW controls DMZ → Internal<br/>DNS UDP 53 required for all services{{#if enableHorizon}}<br/>Horizon — UDP 443 internally forwarded to UDP 9443{{/if}}{{#if enableTunnel}}<br/>Per-App Tunnel — 443 → 8443 internal{{/if}}{{#if enableSEG}}<br/>SEG — {{segListenerPort}} → 11443 internal, 44444 for diagnostics{{/if}}{{#if enableContentGateway}}<br/>Content Gateway — {{cgEndpointPort}} → 10443 internal, custom ports must be &gt; 1024{{/if}}{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 1)}}<br/>TLS Port Sharing — unique DNS per service when sharing 443{{/if}}]
+    NOTES[<b>DMZ Configuration Notes</b><br/>Sizing: {{#if (eq deploymentSize "custom")}}{{customVCPU}} vCPU — {{customRAM}} GB RAM — {{customDisk}} GB{{/if}}{{#if (eq deploymentSize "standard")}}2 vCPU — 4 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "large")}}4 vCPU — 16 GB RAM — 20 GB{{/if}}{{#if (eq deploymentSize "extra-large")}}8 vCPU — 32 GB RAM — 20 GB{{/if}}<br/>Front-end FW controls Internet → DMZ<br/>Back-end FW controls DMZ ↔ Internal flows per enabled services<br/>DNS UDP 53 required for all services{{#if enableHorizon}}<br/>Horizon — UDP 443 internally forwarded to UDP 9443{{/if}}{{#if enableTunnel}}<br/>Per-App Tunnel — 443 → 8443 internal{{/if}}{{#if enableSEG}}<br/>SEG — {{segListenerPort}} → 11443 internal, 44444 for diagnostics{{/if}}{{#if enableContentGateway}}<br/>Content Gateway {{#if (eq cgConfigType "relay")}}Relay — {{cgRelayPort}} → 10443 internal, Relay → Endpoint on {{cgEndpointPort}}{{else}}— {{cgEndpointPort}} → 10443 internal{{/if}}, custom ports must be &gt; 1024{{/if}}{{#if (gt (countTrue enableHorizon enableWebReverseProxy enableTunnel enableSEG enableContentGateway) 1)}}<br/>TLS Port Sharing — unique DNS per service when sharing 443{{/if}}]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 
@@ -329,6 +355,9 @@ graph TD
     style EXT fill:#eceff1,color:#000,stroke:#607d8b
     style DMZ fill:#fff3e0,color:#000,stroke:#ef6c00,stroke-width:2px
     style INT fill:#e8f5e9,color:#000,stroke:#2e7d32
+    {{#if (or enableAdminUI enableSSH)}}
+    style MGMT fill:#ede7f6,color:#000,stroke:#5e35b1
+    {{/if}}
     {{#if showFirewalls}}
     style FFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
     style BFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px

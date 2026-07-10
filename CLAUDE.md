@@ -27,7 +27,7 @@ src/
 ├── parameterUI.ts     # Form generation from parameter definitions
 ├── renderer.ts        # Mermaid rendering + SVG/PNG export
 ├── urlState.ts        # URL query parameter state sync
-├── panZoom.ts         # Pan/zoom controller (mouse, touch, keyboard)
+├── panZoom.ts         # Pan/zoom controller (mouse drag/wheel, touch pinch, on-screen buttons)
 ├── router.ts          # Client-side SPA router (/, /about)
 ├── style.css          # Dark theme styles
 └── templates/         # .mmdx template files (auto-discovered)
