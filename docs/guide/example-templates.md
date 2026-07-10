@@ -38,7 +38,7 @@ Connectivity for the AirWatch Cloud Connector (ACC) in a Workspace ONE UEM envir
 
 **File:** `src/templates/omnissa-uag-v2603-dmz-network.mmdx`
 
-A Unified Access Gateway 2603 appliance in a DMZ, with front-end/back-end firewalls and per-edge-service port flows. The largest template in the set: each edge service is toggled independently — Horizon (with optional Blast TCP/UDP 8443, PCoIP, RDP, USB redirection, and MMR/CDR ports), Web Reverse Proxy (with identity bridging), Per-App Tunnel (basic, cascade, or front-end/back-end topologies against a SaaS or on-prem UEM, with a shared-443 or dedicated-8443 external port select), Secure Email Gateway, and Content Gateway (basic or relay) — plus Workspace ONE Intelligence, OPSWAT, Admin UI, and SSH. A `deploymentSize` select (standard/large/extra-large/custom) sets appliance sizing.
+A Unified Access Gateway 2603 appliance in a DMZ, with front-end/back-end firewalls and per-edge-service port flows. The largest template in the set: each edge service is toggled independently — Horizon (with optional Blast TCP/UDP 8443, PCoIP, RDP, USB redirection, and MMR/CDR ports), Web Reverse Proxy (with identity bridging), Per-App Tunnel (basic, cascade, or front-end/back-end topologies against a SaaS or on-prem UEM, with a shared-443 or dedicated-8443 external port select), Secure Email Gateway, and Content Gateway (basic or relay, with a UEM Device Services placement select — Internal, DMZ, or Cloud) — plus Workspace ONE Intelligence, OPSWAT, Admin UI, and SSH. A `deploymentSize` select (standard/large/extra-large/custom) sets appliance sizing.
 
 ## Omnissa Horizon 8 2603 — Connection Server
 
