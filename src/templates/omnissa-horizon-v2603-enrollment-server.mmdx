@@ -1,7 +1,7 @@
 ---
 {
-  "name": "Omnissa Horizon 8 2603 — TrueSSO Enrollment Server",
-  "notes": "<h4>TrueSSO Enrollment Server Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Framework channel (32111):</b> Each paired Connection Server communicates with the Enrollment Server over TCP 32111. Deploy more than one Enrollment Server for redundancy.</li><li><b>Certificate request:</b> The Enrollment Service uses TCP 135 (RPC) for the initial communication with the Certificate Authority, then a random dynamic port in the {{#if (eq rpcRange \"modern\")}}49152-65535{{else}}1024-5000{{/if}} range, to generate a temporary, short-lived certificate. See Certificate Services in MS KB 832017.</li><li><b>Active Directory:</b> The Enrollment Server communicates with domain controllers using all relevant ports to discover a DC and to bind and query Active Directory. See MS KB 832017.</li><li><b>Source note:</b> The published port table lists the CA dynamic range as &quot;1024-5000 and 4192-65535&quot;; 4192 appears to be a transcription of the modern ephemeral range 49152-65535.</li><li>Reference: Omnissa Horizon 8 2603 — Network Ports / TrueSSO Enrollment Server.</li></ul>",
+  "name": "Omnissa Horizon 8 2603 — True SSO Enrollment Server",
+  "notes": "<h4>True SSO Enrollment Server Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Framework channel (32111):</b> Each paired Connection Server communicates with the Enrollment Server over TCP 32111. Deploy more than one Enrollment Server for redundancy.</li><li><b>Certificate request:</b> The Enrollment Service uses TCP 135 (RPC) for the initial communication with the Certificate Authority, then a random dynamic port in the {{#if (eq rpcRange \"modern\")}}49152-65535{{else}}1024-5000{{/if}} range, to generate a temporary, short-lived certificate. See Certificate Services in MS KB 832017.</li><li><b>Active Directory:</b> The Enrollment Server communicates with domain controllers using all relevant ports to discover a DC and to bind and query Active Directory. See MS KB 832017.</li><li><b>Source note:</b> The published port table lists the CA dynamic range as &quot;1024-5000 and 4192-65535&quot;; 4192 appears to be a transcription of the modern ephemeral range 49152-65535.</li><li>References: <a href=\"https://docs.omnissa.com/bundle/Horizon-Security/page/Horizon8TrueSSOPorts.html\" target=\"_blank\" rel=\"noopener\">Horizon 8 TrueSSO Ports (2303 and later)</a> and <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">Omnissa Ports and Protocols</a>.</li></ul>",
   "parameters": [
     { "key": "esName", "type": "string", "label": "Enrollment Server Hostname", "defaultValue": "es1.example.com" },
     { "key": "esIP", "type": "string", "label": "Enrollment Server IP", "defaultValue": "10.10.10.20" },
@@ -27,7 +27,7 @@ graph TD
     %% ═══════════════════════════════════════
     %%  ENROLLMENT SERVER
     %% ═══════════════════════════════════════
-    ES[<b>Horizon Enrollment Server</b><br/>TrueSSO — Horizon 8 2603<br/>{{esName}} — {{esIP}}{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
+    ES[<b>Horizon Enrollment Server</b><br/>True SSO — Horizon 8 2603<br/>{{esName}} — {{esIP}}{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
 
     %% ═══════════════════════════════════════
     %%  ACTIVE DIRECTORY & PKI
@@ -53,7 +53,7 @@ graph TD
     {{#if showADPorts}}
     ES -->|53 TCP+UDP<br/>DNS| DC
     ES -->|88 TCP+UDP<br/>Kerberos| DC
-    ES -->|135 TCP<br/>RPC endpoint mapper| DC
+    ES -->|135 TCP<br/>RPC then 49152-65535| DC
     ES -->|389 TCP+UDP<br/>LDAP| DC
     ES -->|445 TCP<br/>SMB| DC
     ES -->|464 TCP+UDP<br/>Kerberos password| DC
@@ -69,7 +69,7 @@ graph TD
     %% ═══════════════════════════════════════
     {{#if includeFooterInChart}}
     ES ~~~ NOTES
-    NOTES[<b>TrueSSO Notes</b><br/>As of June 2026<br/>CS → ES framework channel — 32111<br/>ES → CA — 135 RPC then {{#if (eq rpcRange "modern")}}49152-65535{{else}}1024-5000{{/if}}<br/>ES → DC — {{#if showADPorts}}88, 389, 636, 3268, 3269, 445, 464, 135, 53{{else}}all relevant AD ports{{/if}}<br/>Short-lived certificate for SSO]
+    NOTES[<b>True SSO Notes</b><br/>As of June 2026<br/>CS → ES framework channel — 32111<br/>ES → CA — 135 RPC then {{#if (eq rpcRange "modern")}}49152-65535{{else}}1024-5000{{/if}}<br/>ES → DC — {{#if showADPorts}}88, 389, 636, 3268, 3269, 445, 464, 135 then 49152-65535, 53{{else}}all relevant AD ports{{/if}}<br/>Short-lived certificate for SSO]
     style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
     {{/if}}
 

@@ -84,6 +84,18 @@
   white-space: pre-line;
 }
 
+.about-disclaimer {
+  text-align: center;
+  color: #8899a6;
+  font-size: 0.85rem;
+  max-width: 550px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+}
+
 .about-links {
   display: flex;
   justify-content: center;
@@ -300,6 +312,12 @@ button:hover { background: #c73650; }
   background: #e0e0e0;
   border-radius: 50%;
   transition: transform 0.2s;
+}
+
+/* Visible keyboard focus for the hidden checkbox's toggle */
+.param-type-boolean input[type="checkbox"]:focus-visible + .toggle-switch {
+  outline: 2px solid #e94560;
+  outline-offset: 2px;
 }
 
 input[type="checkbox"]:checked + .toggle-switch {

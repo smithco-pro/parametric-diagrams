@@ -1,8 +1,14 @@
 {
   "name": "parametric-diagrams",
+  "description": "Generate parameterized Mermaid diagrams from Handlebars-templated .mmdx files — live preview, SVG/PNG export",
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smithco-pro/parametric-diagrams"
+  },
+  "homepage": "https://smithco-pro.github.io/parametric-diagrams/",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n app,docs -c blue,green \"vite\" \"vitepress dev docs\"",

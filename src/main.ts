@@ -1,7 +1,11 @@
 import "./style.css";
 import { templates } from "./templates";
 import type { DiagramTemplate } from "./templates";
-import { executeTemplate, sanitizeMermaidContext } from "./templateEngine";
+import {
+  executeTemplate,
+  sanitizeMermaidContext,
+  sanitizeNotesContext,
+} from "./templateEngine";
 import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
 import { getStateFromURL, updateURL } from "./urlState";
@@ -33,8 +37,9 @@ for (const [key, tmpl] of Object.entries(templates)) {
 
 async function updateDiagram(context: Record<string, unknown>): Promise<void> {
   if (!currentTemplate) return;
-  // Escape Mermaid-breaking characters in user-typed string values for the
-  // diagram body only; the notes template renders HTML and gets raw values.
+  // Each render path escapes user-typed string values from the raw context:
+  // Mermaid-breaking characters for the diagram body, HTML metacharacters for
+  // the notes template (whose output is assigned to innerHTML below).
   const bodyContext = sanitizeMermaidContext(context, currentTemplate.parameters);
   currentMermaid = executeTemplate(currentTemplate.compiled, bodyContext);
   resolvedText.textContent = currentMermaid;
@@ -43,7 +48,8 @@ async function updateDiagram(context: Record<string, unknown>): Promise<void> {
   updateURL(currentTemplateKey, context);
 
   if (currentTemplate.compiledNotes) {
-    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, context);
+    const notesContext = sanitizeNotesContext(context, currentTemplate.parameters);
+    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, notesContext);
     templateNotes.style.display = "";
   } else {
     templateNotes.innerHTML = "";

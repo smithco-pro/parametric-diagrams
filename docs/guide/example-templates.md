@@ -4,19 +4,19 @@ The project ships with example templates demonstrating different diagram types a
 
 The first three are small general-purpose demos. The Omnissa templates document product network topologies and port requirements; they share some conventions: reference notes rendered below the diagram, an `additionalComments` string appended to the main node, and an `includeFooterInChart` boolean that embeds the notes as a footer node inside the diagram itself (useful for exports).
 
-## Network Topology
+## Example — Network Topology
 
 **File:** `src/templates/network.mmdx`
 
 A top-down network diagram with an internet gateway, firewall, and load balancer feeding into application nodes backed by a database. Parameters rename the load balancer (`lbName`) and toggle the three app nodes, the replica DB, and the Redis cache layer.
 
-## Deployment Flow
+## Example — Deployment Flow
 
 **File:** `src/templates/deployment.mmdx`
 
 A left-to-right CI/CD pipeline from developer commit through build, registry, and deployment stages. Parameters rename the developer, repository, and registry nodes and toggle the staging environment (`enableStaging`) and its approval gate (`enableApproval`).
 
-## Sequence Diagram
+## Example — Sequence Diagram
 
 **File:** `src/templates/sequence.mmdx`
 
@@ -28,7 +28,7 @@ A request/response sequence between client, load balancer, appliance, and databa
 
 An enterprise integration diagram for the Omnissa Access 24.12 Connector and the services it talks to. This is a good showcase of advanced template features: a `deploymentSize` select (small/medium/large/custom, with custom vCPU/RAM/disk number inputs gated by `showWhen`), a `dirSyncMethod` select (AD-LDAP/IWA/LDAP), and chained conditionals (Horizon and Citrix toggles only appear when the Virtual App service is enabled, and the Citrix StoreFront port only when Citrix is). Further toggles cover user auth, Kerberos auth with an optional load balancer, outbound proxy, RSA SecurID, syslog, and NTP.
 
-## Omnissa AirWatch Cloud Connector — Network Topology
+## Omnissa AirWatch Cloud Connector (as of March 2026) — Network Topology
 
 **File:** `src/templates/omnissa-airwatch-cloud-connector.mmdx`
 
@@ -44,7 +44,7 @@ A Unified Access Gateway 2603 appliance in a DMZ, with front-end/back-end firewa
 
 **File:** `src/templates/omnissa-horizon-v2603-connection-server.mmdx`
 
-Ports and flows around a Horizon 8 2603 Connection Server. Toggles cover replica servers (with a count), Cloud Pod Architecture, an events database select (MS SQL/Oracle/PostgreSQL/none), TrueSSO enrollment, vCenter and ESXi hosts, RADIUS and RSA SecurID authentication, Horizon Cloud Connector, App Volumes Manager monitoring, HTML Access, split management traffic, and a tunneled gateway on the Connection Server.
+Ports and flows around a Horizon 8 2603 Connection Server. Toggles cover replica servers (with a count), Cloud Pod Architecture, an events database select (MS SQL/Oracle/PostgreSQL/none), True SSO enrollment, vCenter and ESXi hosts, RADIUS and RSA SecurID authentication, Horizon Cloud Connector, App Volumes Manager monitoring, HTML Access, split management traffic, and a tunneled gateway on the Connection Server.
 
 ## Omnissa Horizon 8 2603 — Horizon Agent
 
@@ -58,11 +58,11 @@ Traffic to and from the Horizon Agent on a desktop or RDS host, organized by con
 
 App Volumes Manager connectivity for Horizon 8 2603, with toggles for agent-to-manager SSL (443 vs 80), ESXi hosts, and Dynamic Environment Manager file-share traffic (445).
 
-## Omnissa Horizon 8 2603 — TrueSSO Enrollment Server
+## Omnissa Horizon 8 2603 — True SSO Enrollment Server
 
 **File:** `src/templates/omnissa-horizon-v2603-enrollment-server.mmdx`
 
-The TrueSSO Enrollment Server and its connections to paired Connection Servers (configurable count), the certificate authority, and Active Directory. A select chooses the CA dynamic RPC range (modern vs legacy), and a toggle expands the AD domain controller port detail.
+The True SSO Enrollment Server and its connections to paired Connection Servers (configurable count), the certificate authority, and Active Directory. A select chooses the CA dynamic RPC range (modern vs legacy), and a toggle expands the AD domain controller port detail.
 
 ## Omnissa Horizon 8 2603 — Horizon Recording Server
 

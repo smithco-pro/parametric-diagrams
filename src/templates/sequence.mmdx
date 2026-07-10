@@ -1,6 +1,6 @@
 ---
 {
-  "name": "Sequence Diagram",
+  "name": "Example — Sequence Diagram",
   "parameters": [
     { "key": "clientName", "type": "string", "label": "Client Name", "defaultValue": "Client" },
     { "key": "appName", "type": "string", "label": "Appliance Name", "defaultValue": "Appliance" },

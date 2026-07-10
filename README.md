@@ -4,6 +4,8 @@
 
 A client-side tool for generating parameterized Mermaid diagrams using Handlebars templates. Select a template, configure parameters, and get a live-rendered diagram. Export as SVG or PNG.
 
+> **Heads up:** This is a personal community project — it is not an official Omnissa product, and it is not supported or endorsed by Omnissa. Please verify any port or sizing information against the [official Omnissa documentation](https://docs.omnissa.com/) before deploying.
+
 Built with Vite, TypeScript, Mermaid.js, and Handlebars.
 
 ## Quick Start

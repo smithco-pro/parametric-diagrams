@@ -60,6 +60,40 @@ describe("getStateFromURL", () => {
     ]);
     expect(state.paramOverrides).toEqual({ known: "yes" });
   });
+
+  it("accepts select values that match a defined option", () => {
+    window.history.replaceState(null, "", "/?size=large");
+    const state = getStateFromURL([
+      {
+        key: "size",
+        type: "select",
+        label: "Size",
+        defaultValue: "small",
+        options: [
+          { label: "Small", value: "small" },
+          { label: "Large", value: "large" },
+        ],
+      },
+    ]);
+    expect(state.paramOverrides.size).toBe("large");
+  });
+
+  it("falls back to defaultValue for select values not in the option list", () => {
+    window.history.replaceState(null, "", "/?size=<script>evil</script>");
+    const state = getStateFromURL([
+      {
+        key: "size",
+        type: "select",
+        label: "Size",
+        defaultValue: "small",
+        options: [
+          { label: "Small", value: "small" },
+          { label: "Large", value: "large" },
+        ],
+      },
+    ]);
+    expect(state.paramOverrides.size).toBe("small");
+  });
 });
 
 describe("updateURL", () => {

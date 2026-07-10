@@ -52,13 +52,20 @@ export function initRouter(): void {
   });
 
   // Handle redirect from 404.html on GitHub Pages
-  const redirectRoute = new URLSearchParams(window.location.search).get("route");
+  const searchParams = new URLSearchParams(window.location.search);
+  const redirectRoute = searchParams.get("route");
   if (redirectRoute) {
     const route = redirectRoute.startsWith(BASE)
       ? redirectRoute.slice(BASE.length) || "/"
       : redirectRoute;
-    history.replaceState(null, "", BASE + route);
-    showPage(route);
+    // Normalize unknown paths to "/" so the address bar matches what is shown
+    const known = route === "/about" ? route : "/";
+    // Preserve remaining query params (template key, parameter overrides) so
+    // urlState.ts can still read them after the URL rewrite
+    searchParams.delete("route");
+    const qs = searchParams.toString();
+    history.replaceState(null, "", BASE + known + (qs ? "?" + qs : ""));
+    showPage(known);
   } else {
     showPage(getRoute());
   }

@@ -78,7 +78,9 @@ export function sanitizeMermaidLabelValue(value: string): string {
  * diagram body: string-typed parameter values (user-typed hostnames, IPs,
  * comments) have Mermaid-breaking characters replaced with numeric entity
  * codes. Use only for the diagram body — the frontmatter notes template
- * renders HTML and must receive the raw values.
+ * renders HTML and must receive values escaped by sanitizeNotesContext
+ * instead. Both sanitizers expect the raw user value as input; never chain
+ * them or values get double-escaped.
  */
 export function sanitizeMermaidContext(
   context: Record<string, unknown>,
@@ -90,6 +92,48 @@ export function sanitizeMermaidContext(
     const value = sanitized[param.key];
     if (typeof value === "string") {
       sanitized[param.key] = sanitizeMermaidLabelValue(value);
+    }
+  }
+  return sanitized;
+}
+
+// Characters that enable HTML/script injection when a parameter value is
+// interpolated into the frontmatter notes template, whose output is assigned
+// to innerHTML. Notes templates are compiled with noEscape (template authors
+// write literal HTML markup), so user-controlled values — including ones
+// arriving from a shared URL via urlState — must be escaped here instead.
+const HTML_VALUE_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function escapeHtmlValue(value: string): string {
+  return value.replace(/[&<>"']/g, (ch) => HTML_VALUE_ESCAPES[ch]);
+}
+
+/**
+ * Returns a copy of the parameter context safe to splice into the frontmatter
+ * notes template (rendered via innerHTML): string-typed parameter values are
+ * HTML-escaped so a hostile value like `<img src=x onerror=...>` — typed into
+ * a form field or smuggled in through a shared URL — renders as inert text.
+ * Author-written markup in the notes template itself is untouched. Use only
+ * for the notes path — the diagram body needs sanitizeMermaidContext. Both
+ * sanitizers expect the raw user value as input; never chain them or values
+ * get double-escaped.
+ */
+export function sanitizeNotesContext(
+  context: Record<string, unknown>,
+  parameters: MmdxMeta["parameters"]
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = { ...context };
+  for (const param of parameters) {
+    if (param.type !== "string") continue;
+    const value = sanitized[param.key];
+    if (typeof value === "string") {
+      sanitized[param.key] = escapeHtmlValue(value);
     }
   }
   return sanitized;

@@ -14,21 +14,27 @@ export function getStateFromURL(parameters?: ParameterDef[]): UrlState {
     for (const def of parameters) {
       const raw = params.get(def.key);
       if (raw === null) continue;
-      paramOverrides[def.key] = coerceValue(raw, def.type);
+      paramOverrides[def.key] = coerceValue(raw, def);
     }
   }
 
   return { template, paramOverrides };
 }
 
-function coerceValue(raw: string, type: string): unknown {
-  switch (type) {
+function coerceValue(raw: string, def: ParameterDef): unknown {
+  switch (def.type) {
     case "boolean":
       return raw === "true";
     case "number": {
       const num = Number(raw);
       return isNaN(num) ? 0 : num;
     }
+    case "select":
+      // Reject values not in the template's option list so shared URLs
+      // can't smuggle arbitrary strings through a select parameter
+      return def.options?.some((opt) => opt.value === raw)
+        ? raw
+        : def.defaultValue;
     default:
       return raw;
   }
