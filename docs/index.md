@@ -4,6 +4,9 @@ layout: home
 hero:
   name: Parametric Diagrams
   tagline: Generate parameterized Mermaid diagrams with Handlebars templates
+  image:
+    src: /favicon.svg
+    alt: Parametric Diagrams
   actions:
     - theme: brand
       text: Get Started

@@ -8,6 +8,17 @@ export default withMermaid(
       "Generate parameterized Mermaid diagrams with Handlebars templates",
     base: "/parametric-diagrams/docs/",
     appearance: "dark",
+    // head hrefs are not base-prefixed automatically, unlike themeConfig.logo
+    head: [
+      [
+        "link",
+        {
+          rel: "icon",
+          type: "image/svg+xml",
+          href: "/parametric-diagrams/docs/favicon.svg",
+        },
+      ],
+    ],
     vite: {
       server: { port: 5175, strictPort: true },
     },
