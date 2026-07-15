@@ -9,12 +9,15 @@ This page documents the public interfaces and functions in each module. These ar
 ```ts
 interface MmdxMeta {
   name: string;
+  notes?: string;
   parameters: {
     key: string;
-    type: "boolean" | "number" | "string";
+    type: "boolean" | "number" | "string" | "select";
     label: string;
     defaultValue: boolean | number | string;
     validation?: { min?: number; max?: number };
+    options?: { label: string; value: string }[];
+    showWhen?: { key: string; value: boolean | number | string };
   }[];
 }
 
@@ -49,6 +52,7 @@ interface DiagramTemplate {
   name: string;
   template: string;
   compiled: HandlebarsTemplateDelegate;
+  compiledNotes?: HandlebarsTemplateDelegate;
   parameters: ParameterDef[];
 }
 ```
@@ -83,9 +87,9 @@ Renders a Mermaid diagram definition into the given container element. On error,
 
 Extracts the rendered SVG element from the container and serializes it to an XML string. Returns `null` if no SVG is found.
 
-#### `exportAsPng(container: HTMLElement): Promise<void>`
+#### `exportAsPng(container: HTMLElement, baseName = "diagram"): Promise<void>`
 
-Converts the rendered SVG to a PNG at 2x resolution using a canvas, then triggers a browser download. The pipeline: SVG string -> Blob URL -> Image -> Canvas (2x scale) -> PNG Blob -> download link.
+Converts the rendered SVG to a PNG at 3x resolution using a canvas, then triggers a browser download named `<baseName>.png`. The pipeline: cloned SVG with inlined computed styles -> base64 data URL (used instead of a blob URL for cross-browser compatibility) -> Image -> Canvas (3x scale) -> PNG Blob -> download link.
 
 ### Configuration
 

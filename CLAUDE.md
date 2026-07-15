@@ -27,7 +27,7 @@ src/
 ├── parameterUI.ts     # Form generation from parameter definitions
 ├── renderer.ts        # Mermaid rendering + SVG/PNG export
 ├── urlState.ts        # URL query parameter state sync
-├── panZoom.ts         # Pan/zoom controller (mouse, touch, keyboard)
+├── panZoom.ts         # Pan/zoom controller (mouse drag/wheel, touch pinch, on-screen buttons)
 ├── router.ts          # Client-side SPA router (/, /about)
 ├── style.css          # Dark theme styles
 └── templates/         # .mmdx template files (auto-discovered)
@@ -74,7 +74,16 @@ Templates may display notes in **two independent places** that must be kept in s
 1. **`notes` field** (JSON frontmatter) — rendered as HTML into `div#template-notes` below the diagram
 2. **`NOTES` node** (Mermaid body, gated by `includeFooterInChart`) — rendered as a styled node inside the diagram SVG
 
-These use different markup (HTML vs Mermaid node labels) and follow separate rendering paths. When updating informational content like sizing specs or configuration details, **update both locations**. Also note that Mermaid node labels cannot contain `|` (pipe) characters — use `—` or `<br/>` as separators instead.
+These use different markup (HTML vs Mermaid node labels) and follow separate rendering paths. When updating informational content like sizing specs or configuration details, **update both locations**. Mind the label constraints below when editing the `NOTES` node.
+
+## Mermaid Label Constraints
+
+Mermaid's flowchart parser is picky about what can appear inside labels — and these apply to Handlebars-spliced text too, so check every conditional branch that injects values:
+
+- **Node labels** (`[...]`, `{...}`, `[(...)]`) cannot contain `|` (pipe) — it's the edge-label delimiter. Use `—` or `<br/>` as separators.
+- **Edge labels** (`-->|...|`) cannot contain `(` `)` parentheses — they're read as node-shape syntax and break the parse (`Expecting … got 'PS'`). Use `—` or `/` instead.
+
+When many edges fan out from one hub node, parallel edges between the same pair stack their labels at the same midpoint and overlap. Consolidate them into a single edge with a `<br/>`-separated multi-line label, and/or add a per-template spacing directive as the first body line: `%%{init: {"flowchart": {"nodeSpacing": 65, "rankSpacing": 95}}}%%` (scoped to that template, so other diagrams are unaffected).
 
 ## Key Architecture Notes
 

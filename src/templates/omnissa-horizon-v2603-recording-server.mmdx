@@ -1,0 +1,104 @@
+---
+{
+  "name": "Omnissa Horizon 8 2603 — Horizon Recording Server",
+  "notes": "<h4>Horizon Recording Server Notes</h4><p><em>As of July 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Availability:</b> Horizon Recording has been available since Horizon 8 2106 (VDI recording; RDSH recording from 2111, Linux agent from 2306) and is included in 8 2603.</li><li><b>Recording data (9443):</b> The Recording Agent on the desktop / RDS host transmits application data to the Recording Server over TLS on TCP 9443. The web console and recording-server-to-recording-server configuration import also use 9443. Agents never write to recording storage directly — only the Recording Server does; agents upload recordings to the server over 9443.</li><li><b>Recording storage (445):</b> {{#if fileShareStorage}}The Recording Server writes recordings to a shared SMB/NTFS file share over TCP 445 — the 2603 documentation recommends a shared NTFS folder for production deployments.{{else}}Local recording storage is shown; the 2603 documentation recommends a shared NTFS folder (SMB, TCP 445) for production deployments.{{/if}} <b>Source note:</b> the 445 storage flow is listed in the <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Tech Zone Horizon 8 port guide</a> (Recording Server table); it appears neither in the versioned 2603 Horizon Recording documentation (which calls out only 9443) nor on <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">ports.omnissa.com</a> (both checked 2026-07-10).</li><li><b>Database:</b> {{#if (eq recDbType \"postgresql\")}}PostgreSQL on TCP 5432 (default port).{{/if}}{{#if (eq recDbType \"mssql\")}}Microsoft SQL Server on TCP 1433 (default port).{{/if}}{{#if (eq recDbType \"sqlite\")}}SQLite — a local database file with no network port; the 2603 documentation's default for test setups. Use Microsoft SQL Server or PostgreSQL for production deployments.{{/if}}</li><li><b>Source note:</b> the ports.omnissa.com Recording Server → Microsoft SQL Server row prints the port as 1443, but the row's own description states the default is 1433 (checked 2026-07-10); this diagram uses 1433. The PostgreSQL port (5432) is listed explicitly in the same entry.</li><li><b>Web console login (LDAPS 636):</b> The Recording Server connects to Active Directory over LDAPS on TCP 636 only if LDAPS integration is enabled for web-console login — per ports.omnissa.com (checked 2026-07-10); this row is not listed in the Tech Zone port guide.</li><li>References: <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Network Ports in Horizon 8 (Omnissa Tech Zone)</a>, <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">Omnissa Ports and Protocols</a> (both checked 2026-07-10), and <a href=\"https://docs.omnissa.com/bundle/Desktops-and-Applications-in-HorizonV2603/page/UsingHorizonRecording.html\" target=\"_blank\" rel=\"noopener\">Using Horizon Recording (2603)</a>.</li></ul>",
+  "parameters": [
+    { "key": "rsName", "type": "string", "label": "Recording Server Hostname", "defaultValue": "rs1.example.com" },
+    { "key": "rsIP", "type": "string", "label": "Recording Server IP", "defaultValue": "10.10.10.30" },
+    { "key": "additionalComments", "type": "string", "label": "Additional Node Comments", "defaultValue": "" },
+    { "key": "fileShareStorage", "type": "boolean", "label": "Shared NTFS File Storage (SMB 445)", "defaultValue": true },
+    { "key": "recDbType", "type": "select", "label": "Recording Database", "defaultValue": "postgresql", "options": [
+      { "label": "PostgreSQL (5432)", "value": "postgresql" },
+      { "label": "Microsoft SQL Server (1433)", "value": "mssql" },
+      { "label": "SQLite (local file — test setups)", "value": "sqlite" }
+    ] },
+    { "key": "ldapsAuth", "type": "boolean", "label": "AD LDAPS Web Console Login (636)", "defaultValue": false },
+    { "key": "multiServer", "type": "boolean", "label": "Multi-Server Config Import (9443)", "defaultValue": false },
+    { "key": "includeFooterInChart", "type": "boolean", "label": "Include Footer Notes in Chart", "defaultValue": false }
+  ]
+}
+---
+graph TD
+    %% ═══════════════════════════════════════
+    %%  MANAGEMENT
+    %% ═══════════════════════════════════════
+    subgraph EXT[Management]
+        ADMIN[👤 Web Console Browser]
+    end
+
+    %% ═══════════════════════════════════════
+    %%  INTERNAL ZONE
+    %% ═══════════════════════════════════════
+    subgraph INT[Internal Network]
+        RS[<b>Horizon Recording Server</b><br/>Horizon 8 2603<br/>{{rsName}} — {{rsIP}}{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
+        RAGENT[🖥️ Recording Agent — Desktop / RDS]
+        {{#if fileShareStorage}}
+        FILESHARE[(📁 SMB / NTFS File Share — Recording Storage)]
+        {{/if}}
+        {{#unless (eq recDbType "sqlite")}}
+        DB[(🗄️ {{#if (eq recDbType "postgresql")}}PostgreSQL{{/if}}{{#if (eq recDbType "mssql")}}Microsoft SQL Server{{/if}})]
+        {{/unless}}
+        {{#if ldapsAuth}}
+        AD[🗄️ Active Directory]
+        {{/if}}
+        {{#if multiServer}}
+        RS2[🔁 Peer Recording Server]
+        {{/if}}
+    end
+
+    %% ═══════════════════════════════════════
+    %%  RECORDING DATA — Agent → Server
+    %% ═══════════════════════════════════════
+    RAGENT -->|9443 TCP TLS<br/>Recording application data| RS
+
+    %% ═══════════════════════════════════════
+    %%  WEB CONSOLE
+    %% ═══════════════════════════════════════
+    ADMIN -->|9443 TCP<br/>Recording Server web console| RS
+
+    %% ═══════════════════════════════════════
+    %%  RECORDING STORAGE — Server → File Share
+    %% ═══════════════════════════════════════
+    {{#if fileShareStorage}}
+    RS -->|445 TCP<br/>SMB — recording storage| FILESHARE
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  DATABASE
+    %% ═══════════════════════════════════════
+    {{#if (eq recDbType "postgresql")}}
+    RS -->|5432 TCP<br/>PostgreSQL| DB
+    {{/if}}
+    {{#if (eq recDbType "mssql")}}
+    RS -->|1433 TCP<br/>Microsoft SQL Server| DB
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  DIRECTORY (web console login)
+    %% ═══════════════════════════════════════
+    {{#if ldapsAuth}}
+    RS -->|636 TCP<br/>LDAPS web console login| AD
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  MULTI-SERVER CONFIG IMPORT
+    %% ═══════════════════════════════════════
+    {{#if multiServer}}
+    RS -->|9443 TCP<br/>Configuration import| RS2
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FOOTER NOTES (in-diagram)
+    %% ═══════════════════════════════════════
+    {{#if includeFooterInChart}}
+    RS ~~~ NOTES
+    NOTES[<b>Horizon Recording Server Notes</b><br/>As of July 2026<br/>Recording Agent → Server — 9443 TLS<br/>Web console — 9443{{#if fileShareStorage}}<br/>Recording storage — SMB 445 to shared NTFS file share<br/>Only the Recording Server writes to the share — agents upload via 9443{{else}}<br/>Local recording storage shown — shared NTFS folder recommended for production{{/if}}<br/>Database — {{#if (eq recDbType "postgresql")}}PostgreSQL 5432{{/if}}{{#if (eq recDbType "mssql")}}Microsoft SQL Server 1433{{/if}}{{#if (eq recDbType "sqlite")}}SQLite local file, no network port — test setups only{{/if}}<br/>AD LDAPS 636 — only if LDAPS web console login is enabled{{#if multiServer}}<br/>Config import — 9443 server to server{{/if}}]
+    style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  STYLES
+    %% ═══════════════════════════════════════
+    style RS fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:2px
+    style EXT fill:#eceff1,color:#000,stroke:#607d8b
+    style INT fill:#e8f5e9,color:#000,stroke:#2e7d32

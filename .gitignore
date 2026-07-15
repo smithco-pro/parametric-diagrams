@@ -29,3 +29,9 @@ docs/.vitepress/cache
 
 # Placeholders
 headshot.svg
+
+# Research working documents and evidence exports (kept local, not published)
+docs/evidence/
+research-handoff.md
+research-return.md
+community-post-handoff.md

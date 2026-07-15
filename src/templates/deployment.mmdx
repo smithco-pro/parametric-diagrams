@@ -1,6 +1,6 @@
 ---
 {
-  "name": "Deployment Flow",
+  "name": "Example — Deployment Flow",
   "parameters": [
     { "key": "devName", "type": "string", "label": "Developer Label", "defaultValue": "Developer" },
     { "key": "repoName", "type": "string", "label": "Repository Name", "defaultValue": "Git Repo" },

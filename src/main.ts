@@ -1,7 +1,11 @@
 import "./style.css";
 import { templates } from "./templates";
 import type { DiagramTemplate } from "./templates";
-import { executeTemplate } from "./templateEngine";
+import {
+  executeTemplate,
+  sanitizeMermaidContext,
+  sanitizeNotesContext,
+} from "./templateEngine";
 import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
 import { getStateFromURL, updateURL } from "./urlState";
@@ -33,14 +37,19 @@ for (const [key, tmpl] of Object.entries(templates)) {
 
 async function updateDiagram(context: Record<string, unknown>): Promise<void> {
   if (!currentTemplate) return;
-  currentMermaid = executeTemplate(currentTemplate.compiled, context);
+  // Each render path escapes user-typed string values from the raw context:
+  // Mermaid-breaking characters for the diagram body, HTML metacharacters for
+  // the notes template (whose output is assigned to innerHTML below).
+  const bodyContext = sanitizeMermaidContext(context, currentTemplate.parameters);
+  currentMermaid = executeTemplate(currentTemplate.compiled, bodyContext);
   resolvedText.textContent = currentMermaid;
   await renderDiagram(currentMermaid, output);
   panZoom.wrap();
   updateURL(currentTemplateKey, context);
 
   if (currentTemplate.compiledNotes) {
-    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, context);
+    const notesContext = sanitizeNotesContext(context, currentTemplate.parameters);
+    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, notesContext);
     templateNotes.style.display = "";
   } else {
     templateNotes.innerHTML = "";
@@ -102,24 +111,27 @@ exportSvgBtn.addEventListener("click", () => {
   const blob = new Blob([svgContent], { type: "image/svg+xml" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "appliance-diagram.svg";
+  a.download = `${currentTemplateKey || "diagram"}.svg`;
   a.click();
   URL.revokeObjectURL(a.href);
 });
 
 exportPngBtn.addEventListener("click", () => {
-  exportAsPng(output);
+  exportAsPng(output, currentTemplateKey || "diagram");
 });
 
 initRouter();
 
-// Check URL for template and parameter overrides, otherwise auto-select first
+// Check URL for template and parameter overrides, otherwise auto-select the
+// featured default template (falling back to the first available template)
+const DEFAULT_TEMPLATE = "omnissa-access-connector-network";
 const urlState = getStateFromURL();
 if (urlState.template && templates[urlState.template]) {
   const paramOverrides = getStateFromURL(templates[urlState.template].parameters).paramOverrides;
   templateSelect.value = urlState.template;
   selectTemplate(urlState.template, paramOverrides);
-} else if (templateSelect.options.length > 1) {
-  templateSelect.value = templateSelect.options[3].value;
-  selectTemplate(templateSelect.value);
+} else {
+  const fallback = templateSelect.options[1]?.value ?? "";
+  templateSelect.value = templates[DEFAULT_TEMPLATE] ? DEFAULT_TEMPLATE : fallback;
+  if (templateSelect.value) selectTemplate(templateSelect.value);
 }

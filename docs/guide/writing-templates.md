@@ -36,6 +36,7 @@ Start with JSON frontmatter between `---` delimiters. Define a display name and 
 | `string` | Text input | String value |
 | `boolean` | Toggle switch | `true` / `false` |
 | `number` | Number input | Numeric value, optional `min`/`max` validation |
+| `select` | Dropdown | One of the `options` values; requires `options: [{ label, value }]` |
 
 ## 3. Write the Diagram Body
 
@@ -140,5 +141,5 @@ graph LR
 
 - Blank lines left by disabled <code v-pre>{{#if}}</code> blocks are automatically collapsed
 - Handlebars does not HTML-escape output (`noEscape: true`), so special characters pass through as-is
-- <code v-pre>{{#if}}</code> only checks truthiness -- it cannot do comparisons like <code v-pre>{{#if port > 1000}}</code>
-- For complex logic, register a [custom Handlebars helper](/architecture/extending#custom-handlebars-helpers)
+- <code v-pre>{{#if}}</code> only checks truthiness -- it does not support inline comparisons like <code v-pre>{{#if port > 1000}}</code>. Use the built-in custom helpers as subexpressions instead, e.g. <code v-pre>{{#if (gt port 1000)}}</code>
+- Six custom helpers ship with the app -- `eq`, `gt`, `not`, `and`, `or`, `countTrue` -- see the [Handlebars reference](/reference/handlebars) for usage. To add more, see [Extending the App](/architecture/extending#custom-handlebars-helpers)

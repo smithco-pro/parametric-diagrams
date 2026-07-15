@@ -1,0 +1,190 @@
+---
+{
+  "name": "Omnissa Horizon 8 2603 — Horizon Agent",
+  "notes": "<h4>Horizon Agent — Display Protocol & Session Notes</h4><p><em>As of June 2026 — verify against current Omnissa Horizon 8 2603 documentation before deployment.</em></p><ul><li><b>Connection modes:</b> Internal (client → agent direct), External (UAG → agent), and Tunneled (Connection Server → agent). The same display protocols apply to each enabled mode.</li>{{#if (eq (countTrue protoBlast protoPCoIP protoRDP) 0)}}<li><b>No display protocol enabled</b> — enable Blast Extreme, PCoIP, or RDP for a usable session.</li>{{/if}}<li><b>Blast Extreme:</b> 22443 TCP+UDP for internal/external; tunneled via the Blast Secure Gateway uses 22443 TCP to the agent.</li><li><b>Side channels:</b> With Blast, CDR traffic is side-channeled inside the Blast ports (22443) by default, and USB redirection can optionally be side-channeled too. Otherwise — including PCoIP and RDP sessions — CDR / MMR uses TCP 9427 and USB redirection uses TCP 32111; enable the separate-port toggles to show those flows.</li><li><b>JMS:</b> The agent registers to the Connection Server over JMS — {{#if jmsEnhanced}}enhanced security (TCP 4002 in addition to TCP 4001, default){{else}}legacy (TCP 4001 only){{/if}}.</li>{{#if unmanagedRegistration}}<li><b>Unmanaged registration:</b> TCP 389 is only required for unmanaged agent registration (e.g. an RDSH agent install without an instant-clone/linked-clone component).</li>{{/if}}<li><b>Framework channel (32111):</b> Also used by the Connection Server for agent administration such as collecting a DCT log bundle (vdmadmin -A -getDCT).</li>{{#if (or enableAppVolumesAgent enableDEM)}}<li><b>Host co-residency:</b> App Volumes Agent and Dynamic Environment Manager run on the same desktop/RDS host as the Horizon Agent. Full server-side topology is in the App Volumes & DEM diagram.</li>{{/if}}<li>References: <a href=\"https://techzone.omnissa.com/resource/network-ports-horizon-8\" target=\"_blank\" rel=\"noopener\">Network Ports in Horizon 8 (Omnissa Tech Zone)</a> and <a href=\"https://ports.omnissa.com/home/Horizon\" target=\"_blank\" rel=\"noopener\">Omnissa Ports and Protocols</a>.</li></ul>",
+  "parameters": [
+    { "key": "agentName", "type": "string", "label": "Agent Host Hostname", "defaultValue": "vdi01.example.com" },
+    { "key": "agentIP", "type": "string", "label": "Agent Host IP", "defaultValue": "10.30.0.50" },
+    { "key": "additionalComments", "type": "string", "label": "Additional Node Comments", "defaultValue": "" },
+    { "key": "showFirewalls", "type": "boolean", "label": "Show Firewalls (external mode)", "defaultValue": true },
+
+    { "key": "modeInternal", "type": "boolean", "label": "Internal — Client → Agent (direct)", "defaultValue": true },
+    { "key": "modeExternal", "type": "boolean", "label": "External — UAG → Agent", "defaultValue": true },
+    { "key": "modeTunneled", "type": "boolean", "label": "Tunneled — Connection Server → Agent", "defaultValue": false },
+
+    { "key": "protoBlast", "type": "boolean", "label": "Blast Extreme (22443)", "defaultValue": true },
+    { "key": "protoPCoIP", "type": "boolean", "label": "PCoIP (4172)", "defaultValue": false },
+    { "key": "protoRDP", "type": "boolean", "label": "RDP (3389)", "defaultValue": false },
+
+    { "key": "sepCDR", "type": "boolean", "label": "Separate CDR / MMR (9427)", "defaultValue": false },
+    { "key": "sepUSB", "type": "boolean", "label": "Separate USB Redirection (32111)", "defaultValue": false },
+
+    { "key": "jmsEnhanced", "type": "boolean", "label": "JMS Enhanced Security (4001 + 4002)", "defaultValue": true },
+    { "key": "unmanagedRegistration", "type": "boolean", "label": "Unmanaged Agent Registration (389)", "defaultValue": false },
+
+    { "key": "enableAppVolumesAgent", "type": "boolean", "label": "App Volumes Agent (443)", "defaultValue": false },
+    { "key": "enableDEM", "type": "boolean", "label": "Dynamic Environment Manager (445)", "defaultValue": false },
+
+    { "key": "includeFooterInChart", "type": "boolean", "label": "Include Footer Notes in Chart", "defaultValue": false }
+  ]
+}
+---
+graph TD
+    %% ═══════════════════════════════════════
+    %%  EXTERNAL ZONE (external mode)
+    %% ═══════════════════════════════════════
+    {{#if modeExternal}}
+    subgraph EXT[External Network]
+        CLIENT_EXT[🌐 External Horizon Client]
+    end
+    subgraph DMZ[DMZ]
+        UAG[🛡️ Unified Access Gateway]
+    end
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FIREWALLS (external mode)
+    %% ═══════════════════════════════════════
+    {{#if (and modeExternal showFirewalls)}}
+    FFW{🛡️ Perimeter Firewall}
+    BFW{🛡️ Back-End Firewall}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  INTERNAL ZONE
+    %% ═══════════════════════════════════════
+    subgraph INT[Internal Network]
+        AGENT[<b>Horizon Agent</b><br/>Desktop / RDS Host<br/>{{agentName}} — {{agentIP}}{{#if additionalComments}}<br/><i>{{additionalComments}}</i>{{/if}}]
+        CS[🖥️ Connection Server]
+        {{#if modeInternal}}
+        CLIENT_INT[💻 Internal Horizon Client]
+        {{/if}}
+        {{#if enableAppVolumesAgent}}
+        AVMGR[📦 App Volumes Manager]
+        {{/if}}
+        {{#if enableDEM}}
+        FILESHARES[📂 SMB / CIFS File Shares]
+        {{/if}}
+    end
+
+    %% ═══════════════════════════════════════
+    %%  FIREWALL BOUNDARY ANCHORS
+    %% ═══════════════════════════════════════
+    {{#if (and modeExternal showFirewalls)}}
+    CLIENT_EXT ~~~ FFW
+    FFW ~~~ UAG
+    UAG ~~~ BFW
+    %% Anchor the back-end firewall above every internal source node so it
+    %% sits on its own band between the DMZ and the Internal Network rather
+    %% than level with the client/Connection Server that point into the agent.
+    BFW ~~~ AGENT
+    BFW ~~~ CS
+    {{#if modeInternal}}
+    BFW ~~~ CLIENT_INT
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  EXTERNAL — Client → UAG → Agent
+    %% ═══════════════════════════════════════
+    {{#if modeExternal}}
+    CLIENT_EXT -->|443 TCP — login XML-API — tunnel{{#if protoBlast}}<br/>8443 TCP+UDP Blast — or 443 port sharing{{/if}}{{#if protoPCoIP}}<br/>4172 TCP+UDP PCoIP{{/if}}| UAG
+    {{#if protoBlast}}
+    UAG -->|22443 TCP+UDP<br/>Blast Extreme| AGENT
+    {{/if}}
+    {{#if protoPCoIP}}
+    UAG -->|4172 TCP+UDP<br/>PCoIP| AGENT
+    {{/if}}
+    {{#if protoRDP}}
+    UAG -->|3389 TCP<br/>RDP| AGENT
+    {{/if}}
+    {{#if sepCDR}}
+    UAG -->|9427 TCP<br/>CDR / MMR| AGENT
+    {{/if}}
+    {{#if sepUSB}}
+    UAG -->|32111 TCP<br/>USB redirection| AGENT
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  INTERNAL — Client → Agent (direct)
+    %% ═══════════════════════════════════════
+    {{#if modeInternal}}
+    {{#if protoBlast}}
+    CLIENT_INT -->|22443 TCP+UDP<br/>Blast Extreme| AGENT
+    {{/if}}
+    {{#if protoPCoIP}}
+    CLIENT_INT -->|4172 TCP+UDP<br/>PCoIP| AGENT
+    {{/if}}
+    {{#if protoRDP}}
+    CLIENT_INT -->|3389 TCP<br/>RDP| AGENT
+    {{/if}}
+    {{#if sepCDR}}
+    CLIENT_INT -->|9427 TCP<br/>CDR / MMR| AGENT
+    {{/if}}
+    {{#if sepUSB}}
+    CLIENT_INT -->|32111 TCP<br/>USB redirection| AGENT
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  TUNNELED — Connection Server → Agent
+    %% ═══════════════════════════════════════
+    {{#if modeTunneled}}
+    {{#if protoBlast}}
+    CS -->|22443 TCP<br/>Blast tunneled| AGENT
+    {{/if}}
+    {{#if protoPCoIP}}
+    CS -->|4172 TCP+UDP<br/>PCoIP tunneled| AGENT
+    {{/if}}
+    {{#if protoRDP}}
+    CS -->|3389 TCP<br/>RDP tunneled| AGENT
+    {{/if}}
+    {{#if sepCDR}}
+    CS -->|9427 TCP<br/>CDR / MMR tunneled| AGENT
+    {{/if}}
+    {{#if sepUSB}}
+    CS -->|32111 TCP<br/>USB tunneled| AGENT
+    {{/if}}
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  AGENT → CS (JMS / registration)
+    %% ═══════════════════════════════════════
+    AGENT -->|{{#if jmsEnhanced}}4001 + 4002 TCP — JMS enhanced{{else}}4001 TCP — JMS legacy{{/if}}<br/>Agent JMS| CS
+    {{#if unmanagedRegistration}}
+    AGENT -.->|389 TCP<br/>Unmanaged agent registration| CS
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  APP VOLUMES & DEM (host co-residency)
+    %% ═══════════════════════════════════════
+    {{#if enableAppVolumesAgent}}
+    AGENT -->|443 TCP — 80 if non-SSL<br/>App Volumes Agent → Manager| AVMGR
+    {{/if}}
+    {{#if enableDEM}}
+    AGENT -->|445 TCP<br/>DEM FlexEngine — SMB shares| FILESHARES
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  FOOTER NOTES (in-diagram)
+    %% ═══════════════════════════════════════
+    {{#if includeFooterInChart}}
+    AGENT ~~~ NOTES
+    NOTES[<b>Horizon Agent Notes</b><br/>As of June 2026<br/>Modes — {{#if modeInternal}}Internal {{/if}}{{#if modeExternal}}External {{/if}}{{#if modeTunneled}}Tunneled{{/if}}<br/>Protocols — {{#if protoBlast}}Blast 22443 {{/if}}{{#if protoPCoIP}}PCoIP 4172 {{/if}}{{#if protoRDP}}RDP 3389{{/if}}{{#if (eq (countTrue protoBlast protoPCoIP protoRDP) 0)}}none — enable Blast, PCoIP, or RDP for a usable session{{/if}}<br/>JMS — {{#if jmsEnhanced}}4001 + 4002 enhanced{{else}}4001 legacy{{/if}}{{#if sepCDR}}<br/>CDR / MMR separated — 9427{{/if}}{{#if sepUSB}}<br/>USB separated — 32111{{/if}}{{#if (or protoPCoIP protoRDP)}}<br/>CDR / MMR + USB side-channel is Blast-only — PCoIP / RDP sessions use 9427 / 32111{{/if}}{{#if unmanagedRegistration}}<br/>Unmanaged registration — 389{{/if}}<br/>Framework channel 32111 — also used by Connection Server admin / DCT log collection]
+    style NOTES fill:#263238,color:#cfd8dc,stroke:#455a64,stroke-width:1px
+    {{/if}}
+
+    %% ═══════════════════════════════════════
+    %%  STYLES
+    %% ═══════════════════════════════════════
+    style AGENT fill:#1565c0,color:#fff,stroke:#0d47a1,stroke-width:2px
+    style INT fill:#e8f5e9,color:#000,stroke:#2e7d32
+    {{#if modeExternal}}
+    style EXT fill:#eceff1,color:#000,stroke:#607d8b
+    style DMZ fill:#fff3e0,color:#000,stroke:#ef6c00,stroke-width:2px
+    {{/if}}
+    {{#if (and modeExternal showFirewalls)}}
+    style FFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
+    style BFW fill:#ffebee,color:#b71c1c,stroke:#c62828,stroke-width:2px
+    {{/if}}

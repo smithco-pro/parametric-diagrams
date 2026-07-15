@@ -40,7 +40,7 @@ const navigate = (url) => {
     <template #layout-top>
       <div class="nav-wrapper">
       <div class="site-top-nav">
-        <span class="nav-brand">&#x1f5a7; Parametric Diagrams</span>
+        <span class="nav-brand"><img :src="base + 'favicon.svg'" alt="" class="brand-icon" /> Parametric Diagrams</span>
         <div class="nav-docs">
           <a
             v-for="section in docSections"

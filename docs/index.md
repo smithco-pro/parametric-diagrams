@@ -4,6 +4,9 @@ layout: home
 hero:
   name: Parametric Diagrams
   tagline: Generate parameterized Mermaid diagrams with Handlebars templates
+  image:
+    src: /favicon.svg
+    alt: Parametric Diagrams
   actions:
     - theme: brand
       text: Get Started
@@ -18,5 +21,5 @@ features:
   - title: Live Preview
     details: Diagrams re-render instantly as you change parameter values. See the resolved Mermaid source alongside the visual output.
   - title: SVG & PNG Export
-    details: Export your diagrams as SVG for vector graphics or PNG at 2x resolution for crisp raster images.
+    details: Export your diagrams as SVG for vector graphics or PNG at 3x resolution for crisp raster images.
 ---

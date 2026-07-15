@@ -12,25 +12,31 @@ Restart the dev server (`npm run dev`) and your template appears in the dropdown
 
 ## Custom Handlebars Helpers {#custom-handlebars-helpers}
 
-Handlebars <code v-pre>{{#if}}</code> only checks truthiness. For more complex logic (comparisons, math, string operations), register custom helpers.
-
-In `src/templateEngine.ts`, add helper registrations before templates are compiled:
+Handlebars <code v-pre>{{#if}}</code> only checks truthiness. For comparisons and boolean logic, the app already ships with six helpers registered in `src/templateEngine.ts`: `eq`, `gt`, `not`, `and`, `or`, and `countTrue` -- see [Handlebars in Templates](/reference/handlebars#custom-helpers) for their signatures and usage. The existing implementations look like this:
 
 ```ts
 import Handlebars from "handlebars";
 
-// Compare two values
-Handlebars.registerHelper("eq", function (a, b) {
-  return a === b;
-});
+// Already registered -- strict equality
+Handlebars.registerHelper("eq", (a, b) => a === b);
 
-// Greater-than comparison
-Handlebars.registerHelper("gt", function (a, b) {
-  return a > b;
-});
+// Already registered -- numeric greater-than
+Handlebars.registerHelper("gt", (a, b) => Number(a) > Number(b));
 ```
 
-Then use them in templates:
+To add a **new** helper (e.g. `lt` or `contains`), follow the same pattern in `src/templateEngine.ts` -- registrations at module top level run before any template is compiled:
+
+```ts
+// Numeric less-than
+Handlebars.registerHelper("lt", (a, b) => Number(a) < Number(b));
+
+// Substring check
+Handlebars.registerHelper("contains", (haystack, needle) =>
+  String(haystack).includes(String(needle))
+);
+```
+
+Use helpers in templates as subexpressions:
 
 ```handlebars
 {{#if (eq deploymentType "production")}}
@@ -90,7 +96,7 @@ Common customizations:
 - **Theme** -- `"default"`, `"dark"`, `"forest"`, `"neutral"`, or a custom theme object
 - **Security level** -- `"strict"` disables click events, `"loose"` allows them
 - **Font** -- Any CSS font-family value
-- See [Mermaid configuration docs](https://mermaid.js.org/config/setup/modules/mermaidAPI.html) for all options
+- See [Mermaid configuration docs](https://mermaid.js.org/config/schema-docs/config.html) for all options
 
 ## Adding a New Export Format
 

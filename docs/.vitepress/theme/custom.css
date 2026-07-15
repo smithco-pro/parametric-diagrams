@@ -129,6 +129,16 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: #e0e0e0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  white-space: nowrap;
+}
+
+.site-top-nav .brand-icon {
+  height: 1em;
+  width: 1em;
+  border-radius: 3px;
 }
 
 /* Doc section links (Guide, Reference, Architecture) */

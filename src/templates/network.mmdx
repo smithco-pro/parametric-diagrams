@@ -1,6 +1,6 @@
 ---
 {
-  "name": "Network Topology",
+  "name": "Example — Network Topology",
   "parameters": [
     { "key": "lbName", "type": "string", "label": "Load Balancer Name", "defaultValue": "Load Balancer" },
     { "key": "appNode1", "type": "boolean", "label": "App Node 1", "defaultValue": true },

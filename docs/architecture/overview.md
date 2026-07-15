@@ -58,7 +58,7 @@ Dynamically generates form controls from parameter definitions:
 Handles Mermaid rendering and diagram export:
 - `renderDiagram()` -- Renders Mermaid source to SVG in a container element
 - `getSvgContent()` -- Serializes rendered SVG to string
-- `exportAsPng()` -- Converts SVG to PNG via canvas at 2x resolution
+- `exportAsPng()` -- Converts SVG to PNG via canvas at 3x resolution
 
 ### `src/urlState.ts` -- URL State Sync
 

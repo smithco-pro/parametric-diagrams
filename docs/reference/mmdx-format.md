@@ -8,6 +8,7 @@ The `.mmdx` (Mermaid Extended) format is a single file containing a JSON frontma
 ---
 {
   "name": "Template Display Name",
+  "notes": "<p>Optional HTML shown below the diagram. Port: {{portNumber}}</p>",
   "parameters": [
     { "key": "variableName", "type": "string", "label": "Human Label", "defaultValue": "default" },
     { "key": "featureToggle", "type": "boolean", "label": "Enable Feature", "defaultValue": true },
@@ -35,7 +36,18 @@ The JSON block between `---` delimiters defines template metadata. It is parsed 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | `string` | Yes | Display name shown in the template dropdown |
+| `notes` | `string` | No | Optional HTML shown below the rendered diagram (see [Template Notes](#template-notes)) |
 | `parameters` | `array` | Yes | Array of parameter definitions |
+
+### Template Notes {#template-notes}
+
+The optional `notes` field holds an HTML fragment that is rendered into `div#template-notes` below the diagram. It is compiled as a Handlebars template, so it may reference parameter values and use the same helpers as the template body, and it re-renders on every parameter change:
+
+```json
+"notes": "<h4>Configuration</h4><p>Feature port: {{portNumber}}</p>"
+```
+
+Because the frontmatter is JSON, the entire `notes` value must be a single JSON string -- escape double quotes as `\"` and avoid raw newlines.
 
 ### Parameter Definition
 
@@ -60,6 +72,8 @@ Each entry in the `parameters` array has these fields:
 | `number` | Number input with optional min/max | Parsed as `Number()`, falls back to `0` if NaN |
 | `select` | Dropdown (`<select>`) from `options` array | Option matching `defaultValue` is pre-selected |
 
+**String sanitization:** Before the diagram body is executed, `string`-typed parameter values have Mermaid-breaking characters replaced with numeric entity codes: `|` becomes `#124;`, `(` becomes `#40;`, and `)` becomes `#41;` (`sanitizeMermaidContext()` in `src/templateEngine.ts`). Mermaid renders these entities as the literal characters, so user-typed values containing `|`, `(`, or `)` display correctly instead of breaking the diagram parse. This applies only to the diagram body -- the `notes` template renders HTML and receives the raw, unsanitized values.
+
 ### Conditional Parameters
 
 Parameters can declare a dependency on another parameter using `showWhen`. The parameter row is hidden from the form when the condition is not met, and its `defaultValue` is used in the template context.
@@ -78,8 +92,8 @@ Dependencies can be chained. If parameter B depends on A, and C depends on B, di
 Everything after the closing `---` is a Mermaid diagram definition with Handlebars expressions. The processing pipeline:
 
 1. **Compilation** -- Handlebars compiles the template source with `noEscape: true` (special characters pass through as-is)
-2. **Execution** -- The compiled template runs with the current parameter values as context
-3. **Cleanup** -- Trailing whitespace is trimmed per line, consecutive blank lines (3+) collapse to a single blank line, and the result is trimmed
+2. **Execution** -- The compiled template runs with the current parameter values as context (`string`-typed values are sanitized first, see [Type Behavior](#type-behavior))
+3. **Cleanup** -- Trailing whitespace is trimmed per line, runs of two or more consecutive blank lines collapse to a single blank line, and the result is trimmed
 4. **Rendering** -- The cleaned Mermaid source is passed to `mermaid.render()`
 
 ## File Discovery
