@@ -1,12 +1,14 @@
 import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
 
+const base = "/parametric-diagrams/docs/";
+
 export default withMermaid(
   defineConfig({
     title: "Parametric Diagrams",
     description:
       "Generate parameterized Mermaid diagrams with Handlebars templates",
-    base: "/parametric-diagrams/docs/",
+    base,
     appearance: "dark",
     // head hrefs are not base-prefixed automatically, unlike themeConfig.logo
     head: [
@@ -15,7 +17,7 @@ export default withMermaid(
         {
           rel: "icon",
           type: "image/svg+xml",
-          href: "/parametric-diagrams/docs/favicon.svg",
+          href: base + "favicon.svg",
         },
       ],
     ],

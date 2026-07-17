@@ -71,6 +71,16 @@ describe("initRouter 404 redirect handling", () => {
     expect(params.get("show")).toBe("true");
   });
 
+  it("normalizes a route colliding with an Object.prototype key to /", async () => {
+    // A bogus redirect ?route=toString must be treated as unknown, not as a
+    // known route via prototype-chain leakage.
+    window.history.replaceState(null, "", `${BASE}/?route=toString`);
+    await loadRouter();
+    expect(window.location.pathname).toBe(BASE + "/");
+    expect(pageDisplay("page-diagrams")).toBe("");
+    expect(pageDisplay("page-about")).toBe("none");
+  });
+
   it("shows the diagrams page when there is no redirect param", async () => {
     window.history.replaceState(null, "", BASE + "/");
     await loadRouter();

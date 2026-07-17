@@ -108,17 +108,42 @@ describe("renderParameterForm", () => {
     expect(input!.checked).toBe(false);
   });
 
-  it("calls onChange when input changes", () => {
-    const container = createContainer();
-    const onChange = vi.fn();
-    renderParameterForm(container, [numberParam], onChange);
-    const input = container.querySelector<HTMLInputElement>(
-      'input[type="number"]'
-    );
-    input!.value = "7";
-    input!.dispatchEvent(new Event("input", { bubbles: true }));
-    expect(onChange).toHaveBeenCalled();
-    expect(onChange.mock.calls[0][0].count).toBe(7);
+  it("calls onChange (debounced) when input changes", () => {
+    vi.useFakeTimers();
+    try {
+      const container = createContainer();
+      const onChange = vi.fn();
+      renderParameterForm(container, [numberParam], onChange);
+      const input = container.querySelector<HTMLInputElement>(
+        'input[type="number"]'
+      );
+      input!.value = "7";
+      input!.dispatchEvent(new Event("input", { bubbles: true }));
+      // Debounced: not called synchronously, fires after the idle gap.
+      expect(onChange).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange.mock.calls[0][0].count).toBe(7);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("calls onChange immediately (not debounced) on change events", () => {
+    vi.useFakeTimers();
+    try {
+      const container = createContainer();
+      const onChange = vi.fn();
+      renderParameterForm(container, [selectParam], onChange);
+      const select = container.querySelector("select");
+      select!.value = "b";
+      select!.dispatchEvent(new Event("change", { bubbles: true }));
+      // change path is synchronous — no timer advance needed.
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange.mock.calls[0][0].mode).toBe("b");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("hides conditional parameter when dependency is false", () => {

@@ -103,18 +103,52 @@ export function renderParameterForm(
 
   updateVisibility(form);
 
+  // Toggles, selects, and blur emit "change" — render immediately. Typing in a
+  // text/number field emits "input" per keystroke — debounce so a fast typist
+  // triggers at most one (expensive) diagram render per idle gap instead of one
+  // render per character. Visibility is still updated synchronously so
+  // showWhen-gated rows react without lag.
+  const emitChange = () => onChange(getParameterValues(form));
+  const debouncedEmit = debounce(emitChange, INPUT_DEBOUNCE_MS);
+
   form.addEventListener("change", () => {
+    debouncedEmit.cancel();
     updateVisibility(form);
-    onChange(getParameterValues(form));
+    emitChange();
   });
 
   form.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     if (target.dataset.paramType !== "boolean") {
       updateVisibility(form);
-      onChange(getParameterValues(form));
+      debouncedEmit();
     }
   });
+}
+
+const INPUT_DEBOUNCE_MS = 150;
+
+// Trailing-edge debounce with a cancel() so a "change" (blur/toggle) can drop a
+// still-pending keystroke render and emit immediately instead.
+function debounce<T extends (...args: never[]) => void>(
+  fn: T,
+  delayMs: number
+): T & { cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const wrapped = ((...args: Parameters<T>) => {
+    if (timer !== null) clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      fn(...args);
+    }, delayMs);
+  }) as T & { cancel: () => void };
+  wrapped.cancel = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  return wrapped;
 }
 
 function getDepthMap(parameters: ParameterDef[]): Map<string, number> {

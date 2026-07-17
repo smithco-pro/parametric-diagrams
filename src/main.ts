@@ -26,6 +26,11 @@ const panZoom = createPanZoom(output);
 let currentTemplate: DiagramTemplate | null = null;
 let currentTemplateKey = "";
 let currentMermaid = "";
+// Last values actually pushed to the DOM, so a parameter change that leaves the
+// output unchanged can skip the expensive Mermaid render / notes rebuild.
+// Reset on every template switch (in selectTemplate) to force the first render.
+let lastRenderedMermaid: string | null = null;
+let lastRenderedNotes: string | null | undefined = undefined;
 
 // Populate template dropdown
 for (const [key, tmpl] of Object.entries(templates)) {
@@ -43,17 +48,29 @@ async function updateDiagram(context: Record<string, unknown>): Promise<void> {
   const bodyContext = sanitizeMermaidContext(context, currentTemplate.parameters);
   currentMermaid = executeTemplate(currentTemplate.compiled, bodyContext);
   resolvedText.textContent = currentMermaid;
-  await renderDiagram(currentMermaid, output);
-  panZoom.wrap();
+
+  // Skip the expensive Mermaid parse + layout when the diagram source is
+  // byte-identical to what is already rendered (e.g. toggling a parameter that
+  // only affects the notes panel).
+  if (currentMermaid !== lastRenderedMermaid) {
+    lastRenderedMermaid = currentMermaid;
+    await renderDiagram(currentMermaid, output);
+    panZoom.wrap();
+  }
+
   updateURL(currentTemplateKey, context);
 
-  if (currentTemplate.compiledNotes) {
-    const notesContext = sanitizeNotesContext(context, currentTemplate.parameters);
-    templateNotes.innerHTML = executeTemplate(currentTemplate.compiledNotes, notesContext);
-    templateNotes.style.display = "";
-  } else {
-    templateNotes.innerHTML = "";
-    templateNotes.style.display = "none";
+  const notesHtml = currentTemplate.compiledNotes
+    ? executeTemplate(
+        currentTemplate.compiledNotes,
+        sanitizeNotesContext(context, currentTemplate.parameters)
+      )
+    : null;
+  // Only rebuild the notes DOM subtree when its rendered HTML actually changed.
+  if (notesHtml !== lastRenderedNotes) {
+    lastRenderedNotes = notesHtml;
+    templateNotes.innerHTML = notesHtml ?? "";
+    templateNotes.style.display = notesHtml === null ? "none" : "";
   }
 }
 
@@ -61,6 +78,10 @@ function selectTemplate(
   key: string,
   paramOverrides?: Record<string, unknown>
 ): void {
+  // A new template's output must never be suppressed by the previous
+  // template's render guards.
+  lastRenderedMermaid = null;
+  lastRenderedNotes = undefined;
   const tmpl = templates[key];
   if (!tmpl) {
     currentTemplate = null;
