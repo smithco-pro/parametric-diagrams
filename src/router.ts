@@ -3,13 +3,32 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const pages = document.querySelectorAll<HTMLElement>(".page");
 const navLinks = document.querySelectorAll<HTMLAnchorElement>("nav a[data-route]");
 
+// Known client-side routes → the page element they reveal. Unknown routes fall
+// back to the diagrams page. Add a route here and both showPage and the
+// 404-redirect normalizer pick it up. A Map (not an object literal) so a route
+// string that collides with an Object.prototype key — e.g. a bogus redirect
+// ?route=toString — is not mistaken for a known route.
+const DEFAULT_PAGE_ID = "page-diagrams";
+const ROUTES = new Map<string, string>([
+  ["/", DEFAULT_PAGE_ID],
+  ["/about", "page-about"],
+]);
+
+function isKnownRoute(route: string): boolean {
+  return ROUTES.has(route);
+}
+
+function pageIdForRoute(route: string): string {
+  return ROUTES.get(route) ?? DEFAULT_PAGE_ID;
+}
+
 function getRoute(): string {
   const path = window.location.pathname;
   return path.startsWith(BASE) ? path.slice(BASE.length) || "/" : "/";
 }
 
 function showPage(route: string): void {
-  const pageId = route === "/about" ? "page-about" : "page-diagrams";
+  const pageId = pageIdForRoute(route);
 
   pages.forEach((page) => {
     page.style.display = page.id === pageId ? "" : "none";
@@ -59,7 +78,7 @@ export function initRouter(): void {
       ? redirectRoute.slice(BASE.length) || "/"
       : redirectRoute;
     // Normalize unknown paths to "/" so the address bar matches what is shown
-    const known = route === "/about" ? route : "/";
+    const known = isKnownRoute(route) ? route : "/";
     // Preserve remaining query params (template key, parameter overrides) so
     // urlState.ts can still read them after the URL rewrite
     searchParams.delete("route");

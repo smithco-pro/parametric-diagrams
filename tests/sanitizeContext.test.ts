@@ -7,9 +7,7 @@ import {
   sanitizeMermaidLabelValue,
   sanitizeNotesContext,
 } from "../src/templateEngine";
-import type { MmdxMeta } from "../src/templateEngine";
-
-type ParameterDef = MmdxMeta["parameters"][number];
+import type { ParameterDef } from "../src/templates";
 
 const parameters: ParameterDef[] = [
   { key: "serverName", type: "string", label: "Server Name", defaultValue: "srv01" },

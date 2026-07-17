@@ -137,10 +137,7 @@ graph TD
         AWCM[☁️ Workspace ONE AWCM]
         {{/if}}
         INTRESOURCES[🔧 Internal Resources / Web Apps]
-        {{#if (eq tunnelTopology "cascade")}}
-        TUNNEL_BE[🚇 Tunnel Back-End]
-        {{/if}}
-        {{#if (eq tunnelTopology "frontend-backend")}}
+        {{#if (or (eq tunnelTopology "cascade") (eq tunnelTopology "frontend-backend"))}}
         TUNNEL_BE[🚇 Tunnel Back-End]
         {{/if}}
         {{#if tunnelSyslogEnabled}}

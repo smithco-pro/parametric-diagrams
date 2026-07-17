@@ -82,19 +82,30 @@ export function sanitizeMermaidLabelValue(value: string): string {
  * instead. Both sanitizers expect the raw user value as input; never chain
  * them or values get double-escaped.
  */
-export function sanitizeMermaidContext(
+// Shared traversal for both sanitizers: returns a copy of the context with the
+// given escape function applied to every string-typed parameter value. The two
+// render paths differ only in which escape function they pass.
+function sanitizeStringParams(
   context: Record<string, unknown>,
-  parameters: MmdxMeta["parameters"]
+  parameters: MmdxMeta["parameters"],
+  escape: (value: string) => string
 ): Record<string, unknown> {
   const sanitized: Record<string, unknown> = { ...context };
   for (const param of parameters) {
     if (param.type !== "string") continue;
     const value = sanitized[param.key];
     if (typeof value === "string") {
-      sanitized[param.key] = sanitizeMermaidLabelValue(value);
+      sanitized[param.key] = escape(value);
     }
   }
   return sanitized;
+}
+
+export function sanitizeMermaidContext(
+  context: Record<string, unknown>,
+  parameters: MmdxMeta["parameters"]
+): Record<string, unknown> {
+  return sanitizeStringParams(context, parameters, sanitizeMermaidLabelValue);
 }
 
 // Characters that enable HTML/script injection when a parameter value is
@@ -128,15 +139,7 @@ export function sanitizeNotesContext(
   context: Record<string, unknown>,
   parameters: MmdxMeta["parameters"]
 ): Record<string, unknown> {
-  const sanitized: Record<string, unknown> = { ...context };
-  for (const param of parameters) {
-    if (param.type !== "string") continue;
-    const value = sanitized[param.key];
-    if (typeof value === "string") {
-      sanitized[param.key] = escapeHtmlValue(value);
-    }
-  }
-  return sanitized;
+  return sanitizeStringParams(context, parameters, escapeHtmlValue);
 }
 
 export function executeTemplate(
