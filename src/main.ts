@@ -10,7 +10,7 @@ import { renderParameterForm, getDefaultContext } from "./parameterUI";
 import { renderDiagram, getSvgContent, exportAsPng } from "./renderer";
 import { getStateFromURL, updateURL } from "./urlState";
 import { createPanZoom } from "./panZoom";
-import { initRouter } from "./router";
+import { initRouter, getRoute } from "./router";
 
 const output = document.getElementById("mermaid-output") as HTMLDivElement;
 const templateSelect = document.getElementById("template-select") as HTMLSelectElement;
@@ -26,6 +26,9 @@ const panZoom = createPanZoom(output);
 let currentTemplate: DiagramTemplate | null = null;
 let currentTemplateKey = "";
 let currentMermaid = "";
+// Last full parameter context, kept so the URL can be re-synced when the user
+// navigates back to the diagrams route (whose pushState drops the query).
+let currentContext: Record<string, unknown> | null = null;
 // Last values actually pushed to the DOM, so a parameter change that leaves the
 // output unchanged can skip the expensive Mermaid render / notes rebuild.
 // Reset on every template switch (in selectTemplate) to force the first render.
@@ -58,7 +61,10 @@ async function updateDiagram(context: Record<string, unknown>): Promise<void> {
     panZoom.wrap();
   }
 
-  updateURL(currentTemplateKey, context);
+  currentContext = context;
+  // Only the diagrams route owns the template query string — writing it on
+  // /about would leak diagram state into shared About links.
+  if (getRoute() === "/") updateURL(currentTemplateKey, context);
 
   const notesHtml = currentTemplate.compiledNotes
     ? executeTemplate(
@@ -141,7 +147,11 @@ exportPngBtn.addEventListener("click", () => {
   exportAsPng(output, currentTemplateKey || "diagram");
 });
 
-initRouter();
+initRouter((route) => {
+  if (route === "/" && currentTemplateKey && currentContext) {
+    updateURL(currentTemplateKey, currentContext);
+  }
+});
 
 // Check URL for template and parameter overrides, otherwise auto-select the
 // featured default template (falling back to the first available template)

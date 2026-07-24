@@ -79,10 +79,8 @@
   --vp-button-brand-text: #fff;
 }
 
-/* Hide dark mode toggle since site is always dark */
-.VPSwitchAppearance {
-  display: none !important;
-}
+/* Dark mode toggle needs no hiding: appearance: 'force-dark' in config.ts
+   stops VitePress from rendering it at all */
 
 /* Hide VitePress default navbar — replaced by our merged navbar */
 .VPNav {
@@ -120,7 +118,9 @@
   background: #16213e;
   border-radius: 8px;
   max-width: 1400px;
-  margin: 1rem auto 0;
+  /* 1.5rem top margin matches the app (body margin 0 + #app padding 1.5rem)
+     so both navbars start 24px from the viewport top */
+  margin: 1.5rem auto 0;
   width: calc(100% - 3rem);
   gap: 1rem;
 }
@@ -193,4 +193,38 @@
 .site-top-nav .nav-links a.active {
   color: #fff;
   background: #e94560;
+}
+
+/* Narrow viewports: wrap the nav groups so every link stays reachable with
+   no horizontal body scroll. The wrapped bar is too tall to stay sticky, so
+   it scrolls with the page and the VitePress local nav takes the top edge. */
+@media (max-width: 900px) {
+  .nav-wrapper {
+    position: static;
+  }
+
+  .VPLocalNav {
+    top: 0 !important;
+  }
+
+  .site-top-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.25rem;
+    padding: 0.75rem;
+    width: calc(100% - 1.5rem);
+  }
+
+  .site-top-nav .nav-docs,
+  .site-top-nav .nav-links {
+    margin-right: 0;
+    margin-left: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .site-top-nav .nav-docs a,
+  .site-top-nav .nav-links a {
+    padding: 0.4rem 0.7rem;
+  }
 }

@@ -9,7 +9,7 @@ export default withMermaid(
     description:
       "Generate parameterized Mermaid diagrams with Handlebars templates",
     base,
-    appearance: "dark",
+    appearance: "force-dark",
     // head hrefs are not base-prefixed automatically, unlike themeConfig.logo
     head: [
       [
@@ -20,7 +20,38 @@ export default withMermaid(
           href: base + "favicon.svg",
         },
       ],
+      // Social meta, mirroring the app's index.html
+      ["meta", { property: "og:title", content: "Parametric Diagrams" }],
+      [
+        "meta",
+        {
+          property: "og:description",
+          content:
+            "Generate customizable Mermaid diagrams from Handlebars-powered templates — live preview, shareable links, and SVG/PNG export.",
+        },
+      ],
+      [
+        "meta",
+        {
+          property: "og:url",
+          content: "https://smithco-pro.github.io/parametric-diagrams/docs/",
+        },
+      ],
+      ["meta", { property: "og:type", content: "website" }],
+      ["meta", { name: "twitter:card", content: "summary" }],
     ],
+    // The default theme preloads its bundled Inter woff2 on every page, but
+    // this theme's font stack never uses Inter — drop the dead preload.
+    transformHead({ head }) {
+      const i = head.findIndex(
+        ([tag, attrs]) =>
+          tag === "link" &&
+          attrs.rel === "preload" &&
+          attrs.as === "font" &&
+          /inter-roman-latin/.test(attrs.href ?? "")
+      );
+      if (i !== -1) head.splice(i, 1);
+    },
     vite: {
       server: { port: 5175, strictPort: true },
     },

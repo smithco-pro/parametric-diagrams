@@ -22,7 +22,7 @@ function pageIdForRoute(route: string): string {
   return ROUTES.get(route) ?? DEFAULT_PAGE_ID;
 }
 
-function getRoute(): string {
+export function getRoute(): string {
   const path = window.location.pathname;
   return path.startsWith(BASE) ? path.slice(BASE.length) || "/" : "/";
 }
@@ -43,7 +43,10 @@ const DOCS_URL = import.meta.env.DEV
   ? "http://localhost:5175/parametric-diagrams/docs/" // For development, point to the docs in the concurrent Vite server
   : BASE + "/docs/";
 
-export function initRouter(): void {
+// onNavigate fires after the user moves between routes (nav click or
+// history back/forward) — not on the initial page load, whose route the
+// caller can read itself via getRoute().
+export function initRouter(onNavigate?: (route: string) => void): void {
   // Handle docs link via click to avoid query param leakage
   const docsLink = document.querySelector<HTMLAnchorElement>(
     'nav a[data-docs]'
@@ -63,11 +66,14 @@ export function initRouter(): void {
       e.preventDefault();
       history.pushState(null, "", BASE + route);
       showPage(route);
+      onNavigate?.(route);
     });
   });
 
   window.addEventListener("popstate", () => {
-    showPage(getRoute());
+    const route = getRoute();
+    showPage(route);
+    onNavigate?.(route);
   });
 
   // Handle redirect from 404.html on GitHub Pages

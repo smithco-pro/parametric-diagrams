@@ -17,10 +17,10 @@ function setupDOM(): void {
 
 // router.ts queries the DOM at module load, so re-import it fresh after the
 // DOM and URL for each test are in place.
-async function loadRouter(): Promise<void> {
+async function loadRouter(onNavigate?: (route: string) => void): Promise<void> {
   vi.resetModules();
   const { initRouter } = await import("../src/router");
-  initRouter();
+  initRouter(onNavigate);
 }
 
 function pageDisplay(id: string): string {
@@ -86,5 +86,41 @@ describe("initRouter 404 redirect handling", () => {
     await loadRouter();
     expect(pageDisplay("page-diagrams")).toBe("");
     expect(pageDisplay("page-about")).toBe("none");
+  });
+});
+
+describe("initRouter navigation callback", () => {
+  beforeEach(() => {
+    setupDOM();
+  });
+
+  it("does not fire on the initial page load", async () => {
+    window.history.replaceState(null, "", BASE + "/");
+    const onNavigate = vi.fn();
+    await loadRouter(onNavigate);
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it("fires with the route on nav link clicks", async () => {
+    window.history.replaceState(null, "", BASE + "/");
+    const onNavigate = vi.fn();
+    await loadRouter(onNavigate);
+
+    document.querySelector<HTMLAnchorElement>('a[data-route="/about"]')!.click();
+    expect(onNavigate).toHaveBeenCalledExactlyOnceWith("/about");
+
+    document.querySelector<HTMLAnchorElement>('a[data-route="/"]')!.click();
+    expect(onNavigate).toHaveBeenLastCalledWith("/");
+  });
+
+  it("fires with the current route on popstate", async () => {
+    window.history.replaceState(null, "", BASE + "/");
+    const onNavigate = vi.fn();
+    await loadRouter(onNavigate);
+
+    window.history.replaceState(null, "", BASE + "/about");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(onNavigate).toHaveBeenCalledExactlyOnceWith("/about");
+    expect(pageDisplay("page-about")).toBe("");
   });
 });

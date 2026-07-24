@@ -4,6 +4,12 @@
   background-color: #1a1a2e;
 }
 
+/* Match the docs site (VitePress resets body margin) so the nav sits at the
+   same offset on both sites and the brand doesn't jump 8px between them */
+body {
+  margin: 0;
+}
+
 #app {
   max-width: 1400px;
   margin: 0 auto;
@@ -19,12 +25,16 @@
   background: #16213e;
   border-radius: 8px;
   margin-bottom: 1rem;
+  /* Match the docs site (VitePress sets body line-height: 24px) so both
+     navbars compute the same height */
+  line-height: 24px;
 }
 
 .nav-brand {
   font-size: 1.1rem;
   font-weight: 700;
   color: #e0e0e0;
+  white-space: nowrap;
 }
 
 .brand-icon {
@@ -417,9 +427,32 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   .preview-panel {
     flex: none;
     width: 100%;
+    /* width:100% + the panel's own padding overflows the viewport without this
+       (the app has no global border-box reset) */
+    box-sizing: border-box;
   }
 
   .preview-panel {
     min-height: 60vh;
+  }
+}
+
+/* Narrow phones: let the nav wrap and tighten link padding so all links
+   stay on-screen with no horizontal body scroll */
+@media (max-width: 480px) {
+  .top-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    padding: 0.4rem 0.7rem;
   }
 }

@@ -51,7 +51,7 @@ const navigate = (url) => {
         </div>
         <div class="nav-links">
           <a :href="diagramsLink" @click.prevent="navigate(diagramsLink)">Diagrams</a>
-          <a href="javascript:void(0)" class="active">Docs</a>
+          <a :href="base" class="active">Docs</a>
           <a :href="aboutLink" @click.prevent="navigate(aboutLink)">About Me</a>
         </div>
       </div>
